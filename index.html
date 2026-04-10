@@ -7,21 +7,29 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
+        /* Contact Ways - Official Design System v2.05 */
         :root {
+            /* Primary Colors */
             --color-brand-primary: #3730a3;    /* Indigo 900 */
             --color-brand-accent: #4f46e5;     /* Indigo 600 */
             --color-bg-main: #f1f5f9;          /* Slate 100 */
             --color-text-dark: #0f172a;        /* Slate 950 */
             --color-text-muted: #64748b;       /* Slate 500 */
+
+            /* Semantic Matrix Colors */
             --color-under: #fb923c;            /* Orange 400 */
             --color-flow: #34d399;             /* Emerald 400 */
             --color-over: #fb7185;             /* Rose 400 */
+
+            /* Shadows & Elevation */
             --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
             --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
             --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
-            --radius-card: 2rem;               /* 32px per spec */
+            
+            /* Border Radius */
+            --radius-card: 2rem;               /* 32px */
         }
 
         body { 
@@ -33,7 +41,7 @@
 
         /* Glassmorphism Overlay */
         .glass-overlay {
-            background: rgba(15, 23, 42, 0.8);
+            background: rgba(15, 23, 42, 0.8); /* Slate 950 alpha 0.8 */
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             z-index: 100;
@@ -53,7 +61,7 @@
             box-shadow: var(--shadow-xl);
         }
         .matrix-card-header {
-            background-color: rgba(238, 242, 255, 0.5);
+            background-color: rgba(238, 242, 255, 0.5); /* Indigo 50/50 */
             padding: 1.5rem;
             border-bottom: 1px solid #e2e8f0;
         }
@@ -95,19 +103,19 @@
             margin-top: 0.75rem;
         }
         .label-item {
-            font-size: 0.65rem; /* ~9px */
+            font-size: 9px;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             text-align: center;
         }
-        .label-under { color: var(--color-under); }
-        .label-flow  { color: var(--color-flow); }
-        .label-over  { color: var(--color-over); }
+        .label-under { color: var(--color-under); text-align: right; }
+        .label-flow  { color: var(--color-flow); text-align: center; }
+        .label-over  { color: var(--color-over); text-align: left; }
 
         /* Tooltip Style */
         .info-trigger {
-            cursor: help;
+            cursor: pointer;
             color: var(--color-text-muted);
             transition: color 0.2s;
         }
@@ -136,100 +144,84 @@
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
-<body class="min-h-screen">
+<body class="min-h-screen pb-12">
 
-    <!-- Header Navigation -->
-    <nav class="bg-white border-b sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
+    <nav class="bg-white border-b sticky top-0 z-50 px-6 py-4 flex justify-between items-center shadow-sm">
         <div class="flex items-center gap-3">
             <div class="bg-indigo-900 p-2 rounded-xl text-white">
                 <i data-lucide="activity" class="w-6 h-6"></i>
             </div>
-            <h1 class="text-xl font-[900] text-indigo-900 tracking-tight">Contact <span class="text-indigo-600">Ways</span></h1>
+            <h1 class="text-2xl font-[900] text-indigo-900 tracking-tight">Contact <span class="text-indigo-600">Ways</span></h1>
         </div>
         <div class="flex gap-6">
             <button onclick="switchTab('input')" id="tab-input" class="pb-1 tab-active text-sm">מיפוי</button>
-            <button onclick="switchTab('history')" id="tab-history" class="pb-1 text-slate-500 text-sm">היסטוריה</button>
-            <button onclick="switchTab('ai')" id="tab-ai" class="pb-1 text-slate-500 text-sm">ייעוץ AI</button>
+            <button onclick="switchTab('ai')" id="tab-ai" class="pb-1 text-slate-500 text-sm flex items-center gap-1"><i data-lucide="sparkles" class="w-4 h-4"></i> התייעץ עם AI</button>
         </div>
     </nav>
 
     <main class="max-w-5xl mx-auto p-6 md:p-10">
         
-        <!-- MAPPING SECTION -->
         <section id="section-input" class="space-y-8">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                 <div>
-                    <h2 class="text-4xl font-[900] text-indigo-900 leading-none">מיפוי סשן</h2>
-                    <p class="text-slate-500 font-light mt-2 max-w-md">נתח את איכויות התנועה והתקשורת שחווית. המטריצה עוזרת להגדיר את ה-Flow שלך.</p>
+                    <h2 class="text-4xl font-[900] text-indigo-900 leading-none mb-2">מיפוי סשן תנועה</h2>
+                    <p class="text-slate-500 font-light max-w-lg">הזז את הסליידרים כדי לשקף את הדינמיקה שחווית. לחץ על סמל המידע (i) ליד כל פרמטר להסבר על מצבי ה-Under, Flow ו-Over.</p>
                 </div>
-                <button onclick="saveSession()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-10 py-4 rounded-[0.75rem] font-bold shadow-lg transition-all flex items-center gap-2">
-                    <i data-lucide="check-circle" class="w-5 h-5"></i> שמירת נתונים
-                </button>
             </div>
 
             <div id="matrix-grid" class="grid gap-8 md:grid-cols-2">
-                <!-- Cards will be injected by JS -->
-            </div>
+                </div>
         </section>
 
-        <!-- AI SECTION -->
-        <section id="section-ai" class="hidden space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div class="matrix-card">
-                <div class="matrix-card-header bg-indigo-600 text-white flex justify-between items-center">
-                    <h2 class="text-xl font-[800]">התייעצות מומחה AI</h2>
-                    <i data-lucide="sparkles" class="w-6 h-6 opacity-50"></i>
+        <section id="section-ai" class="hidden space-y-8">
+            <div class="matrix-card border-t-4 border-t-indigo-600">
+                <div class="matrix-card-header bg-indigo-50 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-[900] text-indigo-900 flex items-center gap-2">
+                            <i data-lucide="brain-circuit" class="w-6 h-6 text-indigo-600"></i> התייעצות מומחה AI
+                        </h2>
+                        <p class="text-slate-500 text-sm mt-1">המערכת מייצרת פרומפט מותאם אישית הכולל את נתוני המטריצה שלך.</p>
+                    </div>
                 </div>
                 <div class="p-8 space-y-6">
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-2">בחר דמות הוראה:</label>
-                        <select id="ai-teacher" onchange="updatePrompt()" class="w-full p-4 bg-slate-50 border rounded-2xl font-bold outline-none focus:ring-2 focus:ring-indigo-500">
-                            <option value="Nancy Stark Smith">ננסי סטארק סמית' (The Underscore)</option>
-                            <option value="Steve Paxton">סטיב פקסטון (Small Dance & Physics)</option>
-                            <option value="Ray Chung">ריי צ'ונג (Momentum & Engineering)</option>
-                            <option value="DMT Therapist">מטפל/ת בתנועה (ויסות והתקשרות)</option>
+                        <select id="ai-teacher" onchange="updatePrompt()" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="ננסי סטארק סמית' (The Underscore)">ננסי סטארק סמית' (The Underscore)</option>
+                            <option value="סטיב פקסטון (Small Dance & Physics)">סטיב פקסטון (Small Dance & Physics)</option>
+                            <option value="ריי צ'ונג (Momentum & Engineering)">ריי צ'ונג (Momentum & Engineering)</option>
+                            <option value="מטפל/ת בתנועה (DMT - ויסות והתקשרות)">מטפל/ת בתנועה (DMT - ויסות והתקשרות)</option>
                         </select>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-2">מה תרצה לחקור?</label>
-                        <textarea id="ai-query" oninput="updatePrompt()" class="w-full p-4 bg-slate-50 border rounded-2xl h-32 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="תאר אתגר, תחושה או שאלה שעלתה בריקוד..."></textarea>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">מה תרצה לשאול או לחקור לגבי הסשן?</label>
+                        <textarea id="ai-query" oninput="updatePrompt()" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl h-28 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="תאר תחושה ספציפית, אתגר שעלה בריקוד, או בקש דגשים לשיפור..."></textarea>
                     </div>
 
-                    <div class="bg-slate-50 p-6 rounded-3xl border border-slate-100 ai-bubble">
-                        <h4 class="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-3 flex items-center gap-2">
-                            <i data-lucide="message-square" class="w-3 h-3"></i> תצוגת הפרומפט שיישלח:
+                    <div class="bg-indigo-50 p-6 rounded-3xl border border-indigo-100 ai-bubble">
+                        <h4 class="text-xs font-black uppercase tracking-widest text-indigo-400 mb-3 flex items-center gap-2">
+                            <i data-lucide="code" class="w-4 h-4"></i> תצוגה מקדימה של הפרומפט שנוצר:
                         </h4>
-                        <div id="prompt-preview" class="text-sm text-slate-600 leading-relaxed max-h-48 overflow-y-auto custom-scroll"></div>
+                        <div id="prompt-preview" class="text-sm text-slate-700 leading-relaxed max-h-60 overflow-y-auto custom-scroll whitespace-pre-wrap"></div>
                     </div>
 
-                    <button onclick="copyPrompt()" class="w-full bg-slate-950 text-white py-5 rounded-2xl font-black flex justify-center items-center gap-3 hover:bg-indigo-900 transition">
-                        <i data-lucide="copy" class="w-5 h-5"></i> העתק פרומפט ופתח צ'אט
+                    <button onclick="copyPrompt()" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-black flex justify-center items-center gap-3 hover:bg-slate-800 transition shadow-md">
+                        <i data-lucide="copy" class="w-5 h-5"></i> העתק פרומפט ללוח
                     </button>
-                </div>
-            </div>
-        </section>
-
-        <!-- HISTORY SECTION -->
-        <section id="section-history" class="hidden space-y-6">
-            <div class="matrix-card p-8">
-                <h2 class="text-2xl font-black text-indigo-900 mb-6">מגמות ונתונים</h2>
-                <div class="aspect-[16/9] md:aspect-[21/9]">
-                    <canvas id="historyChart"></canvas>
                 </div>
             </div>
         </section>
 
     </main>
 
-    <!-- Modal for Tooltips -->
-    <div id="info-modal" class="hidden fixed inset-0 glass-overlay flex items-center justify-center p-6">
-        <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl relative">
-            <button onclick="closeInfo()" class="absolute top-6 left-6 text-slate-400 hover:text-slate-900">
-                <i data-lucide="x" class="w-6 h-6"></i>
+    <div id="info-modal" class="hidden fixed inset-0 glass-overlay flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl relative">
+            <button onclick="closeInfo()" class="absolute top-6 left-6 text-slate-400 hover:text-slate-900 transition bg-slate-100 p-2 rounded-full">
+                <i data-lucide="x" class="w-5 h-5"></i>
             </button>
-            <div id="info-content" class="space-y-6 mt-4">
-                <!-- Content injected here -->
-            </div>
+            <div id="info-content" class="space-y-6 mt-2">
+                </div>
         </div>
     </div>
 
@@ -237,49 +229,48 @@
         // --- APP DATA CONFIGURATION ---
         const matrixSchema = {
             weight: {
-                label: "העברת משקל",
+                label: "העברת משקל (Weight Sharing)",
                 description: "האופן שבו אנו מוסרים את כובד הגוף לתוך המגע והמרחב.",
-                under: { title: "Under", text: "הימנעות ממתן משקל; 'החזקה' עצמית נוקשה. תחושה של פרטנר 'קל' מדי או מרוחק." },
+                under: { title: "Under", text: "הימנעות ממתן משקל; \"החזקה\" עצמית נוקשה. תחושה של פרטנר \"קל\" מדי או מרוחק." },
                 flow: { title: "Flow", text: "משקל רספונסיבי; דיאלוג של כוחות שבו המשקל עובר כמידע זורם. הישענות בטוחה." },
-                over: { title: "Over", text: "קריסה; הפלת משקל פתאומית ללא התרעה. 'תלייה' כבדה שפוגעת ביכולת התנועה." }
+                over: { title: "Over", text: "קריסה; הפלת משקל פתאומית ללא התרעה. \"תלייה\" כבדה שפוגעת ביכולת התנועה של האחר." }
             },
             contact: {
-                label: "נקודת מגע",
+                label: "נקודת מגע (Rolling Point of Contact)",
                 description: "ה-Rolling Point of Contact כציר הניווט המרכזי.",
-                under: { title: "Under", text: "נקודת מגע סטטית או 'קופצנית'; ניתוקים תכופים וקושי לשמור על רצף." },
+                under: { title: "Under", text: "נקודת מגע סטטית או \"קופצנית\"; ניתוקים תכופים וקושי לשמור על רצף." },
                 flow: { title: "Flow", text: "נקודת מגע נושמת ומתגלגלת (Rolling); המגע מוליך את התנועה במרחב באופן תלת-ממדי." },
-                over: { title: "Over", text: "הצמדות יתר; 'דבק' שמונע מהנקודה להתגלגל. הפעלת לחץ (Pushing) במקום גלגול." }
+                over: { title: "Over", text: "הצמדות יתר; \"דבק\" שמונע מהנקודה להתגלגל. הפעלת לחץ (Pushing) במקום גלגול." }
             },
             skeletal: {
-                label: "שימוש במבנה גרמי",
-                description: "הסתמכות על השלד (Alignment) מול מאמץ שרירי.",
+                label: "שימוש במבנה גרמי (Skeletal Alignment)",
+                description: "הסתמכות על השלד מול מאמץ שרירי.",
                 under: { title: "Under", text: "הסתמכות על כוח שרירי בלבד; חוסר ניצול של המבנה לחיסכון באנרגיה." },
-                flow: { title: "Flow", text: "יישור שלדי המאפשר להעביר כוחות דרך העצמות לרצפה. תחושת יציבות נינוחה." },
+                flow: { title: "Flow", text: "יישור שלדי (Alignment) המאפשר להעביר כוחות דרך העצמות לרצפה. תחושת יציבות נינוחה." },
                 over: { title: "Over", text: "נוקשות שלדית; שימוש במבנה ככלי לחסימה או לנעילה של הפרטנר." }
             },
             resonance: {
-                label: "תהודה רגשית",
+                label: "תהודה רגשית (Affective Resonance)",
                 description: "היכולת להרגיש את הפרטנר והסיטואציה מבלי להיאבד.",
                 under: { title: "Under", text: "תנועה מכנית ומנותקת מהחוויה הרגשית. אין השפעה הדדית." },
-                flow: { title: "Flow", text: "חיבור אמפתי גמיש המאפשר להרגיש מבלי לאבד מרכז." },
+                flow: { title: "Flow", text: "\"טווח הזהב\" – חיבור אמפתי גמיש המאפשר להרגיש מבלי לאבד מרכז." },
                 over: { title: "Over", text: "הצפה רגשית (Enmeshment) שפוגעת בבטיחות ובגבולות האישיים." }
             },
             leading: {
-                label: "איזון הובלה",
-                description: "הדינמיקה שבין הקשבה (Following) ליוזמה (Leading).",
+                label: "איזון הובלה (Zeitgeber Balance)",
+                description: "הדינמיקה שבין הקשבה ליוזמה.",
                 under: { title: "Under", text: "עקיבה פסיבית מוחלטת (Pacing) ללא מתן אינפורמציה חזרה." },
-                flow: { title: "Flow", text: "חילופין נזילים וספונטניים; 'הקשבה אקטיבית' שמובילה להובלה משותפת." },
-                over: { title: "Over", text: "הובלה מתמדת ונוקשה ללא יכולת להקשיב לדחפי האחר." }
+                flow: { title: "Flow", text: "חילופין נזילים וספונטניים; \"הקשבה אקטיבית\" שמובילה להובלה משותפת." },
+                over: { title: "Over", text: "הובלה מתמדת ונוקשה (Leading) ללא יכולת להקשיב לדחפי האחר." }
             }
         };
 
         const categories = [
             { title: "מכניקה ופיזיקה", ids: ['weight', 'contact', 'skeletal'] },
-            { title: "נוכחות ותקשורת", ids: ['resonance', 'leading'] }
+            { title: "ציר המגע והתודעה", ids: ['resonance', 'leading'] }
         ];
 
         let currentSession = {};
-        let history = JSON.parse(localStorage.getItem('cw_v2_history') || '[]');
 
         // --- UI CORE ---
         window.onload = () => {
@@ -304,12 +295,12 @@
                         <div class="mb-10 last:mb-0">
                             <div class="flex justify-between items-center mb-4">
                                 <div class="flex items-center gap-2">
-                                    <span class="font-bold text-slate-800">${data.label}</span>
-                                    <button onclick="openInfo('${id}')" class="info-trigger">
+                                    <span class="font-bold text-slate-800">${data.label.split(' (')[0]}</span>
+                                    <button onclick="openInfo('${id}')" class="info-trigger bg-slate-100 p-1 rounded-full" title="הסבר על הפרמטר">
                                         <i data-lucide="info" class="w-4 h-4"></i>
                                     </button>
                                 </div>
-                                <span id="val-badge-${id}" class="text-xs font-black px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full">FLOW</span>
+                                <span id="val-badge-${id}" class="text-xs font-black px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full tracking-wider">FLOW</span>
                             </div>
                             <input type="range" min="0" max="100" value="50" oninput="updateRange('${id}', this.value)">
                             <div class="label-grid">
@@ -323,7 +314,7 @@
 
                 card.innerHTML = `
                     <div class="matrix-card-header">
-                        <h3 class="font-[800] text-indigo-900">${cat.title}</h3>
+                        <h3 class="font-[800] text-indigo-900 text-xl">${cat.title}</h3>
                     </div>
                     <div class="p-8">${controlsHtml}</div>
                 `;
@@ -337,13 +328,13 @@
             const badge = document.getElementById(`val-badge-${id}`);
             if (val < 35) {
                 badge.innerText = "UNDER";
-                badge.className = "text-xs font-black px-3 py-1 bg-orange-100 text-orange-700 rounded-full";
+                badge.className = "text-xs font-black px-3 py-1 bg-orange-100 text-orange-700 rounded-full tracking-wider";
             } else if (val > 65) {
                 badge.innerText = "OVER";
-                badge.className = "text-xs font-black px-3 py-1 bg-rose-100 text-rose-700 rounded-full";
+                badge.className = "text-xs font-black px-3 py-1 bg-rose-100 text-rose-700 rounded-full tracking-wider";
             } else {
                 badge.innerText = "FLOW";
-                badge.className = "text-xs font-black px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full";
+                badge.className = "text-xs font-black px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full tracking-wider";
             }
             updatePrompt();
         }
@@ -354,26 +345,25 @@
             const content = document.getElementById('info-content');
             content.innerHTML = `
                 <div>
-                    <h3 class="text-2xl font-black text-indigo-900 mb-1">${data.label}</h3>
-                    <p class="text-slate-500 font-light text-sm">${data.description}</p>
+                    <h3 class="text-2xl font-black text-indigo-900 mb-2">${data.label}</h3>
+                    <p class="text-slate-500 font-medium text-sm leading-relaxed">${data.description}</p>
                 </div>
-                <div class="space-y-4 pt-4 border-t">
+                <div class="space-y-4 pt-4 border-t border-slate-100">
                     <div class="p-4 rounded-2xl bg-orange-50 border border-orange-100">
-                        <strong class="block text-orange-700 text-xs uppercase mb-1">${data.under.title}</strong>
-                        <p class="text-xs text-orange-900/80 leading-relaxed">${data.under.text}</p>
+                        <strong class="block text-orange-700 text-xs uppercase tracking-wider mb-1">${data.under.title} (תת-תגובה)</strong>
+                        <p class="text-sm text-orange-900/80 leading-relaxed">${data.under.text}</p>
                     </div>
                     <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-100">
-                        <strong class="block text-emerald-700 text-xs uppercase mb-1">${data.flow.title}</strong>
-                        <p class="text-xs text-emerald-900/80 leading-relaxed">${data.flow.text}</p>
+                        <strong class="block text-emerald-700 text-xs uppercase tracking-wider mb-1">${data.flow.title} (תגובה אינטגרטיבית)</strong>
+                        <p class="text-sm text-emerald-900/80 leading-relaxed">${data.flow.text}</p>
                     </div>
                     <div class="p-4 rounded-2xl bg-rose-50 border border-rose-100">
-                        <strong class="block text-rose-700 text-xs uppercase mb-1">${data.over.title}</strong>
-                        <p class="text-xs text-rose-900/80 leading-relaxed">${data.over.text}</p>
+                        <strong class="block text-rose-700 text-xs uppercase tracking-wider mb-1">${data.over.title} (תגובת יתר)</strong>
+                        <p class="text-sm text-rose-900/80 leading-relaxed">${data.over.text}</p>
                     </div>
                 </div>
             `;
             document.getElementById('info-modal').classList.remove('hidden');
-            lucide.createIcons();
         }
 
         function closeInfo() {
@@ -383,52 +373,58 @@
         // --- AI PROMPT ENGINE ---
         function updatePrompt() {
             const teacher = document.getElementById('ai-teacher').value;
-            const query = document.getElementById('ai-query').value || "{השאלה שלך}";
+            const query = document.getElementById('ai-query').value || "{הקלד את שאלתך למעלה}";
             
-            let systemInstr = `אתה מומחה לניתוח תנועה, טיפול בתנועה וקונטקט אימפרוביזציה. תפקידך לסייע למשתמש לעבד סשן תנועתי שביצע. אתה משתמש ב'מטריצת Contact Ways' המנתחת תנועה על רצף שבין Under (תת-תגובה), Flow (זרימה אינטגרטית) ו-Over (תגובת יתר). ענה בסגנון המקצועי של ${teacher}.`;
+            // 1. System Instruction
+            let promptText = `אתה מומחה לניתוח תנועה, טיפול בתנועה וקונטקט אימפרוביזציה. תפקידך לסייע למשתמש לעבד סשן תנועתי שביצע. אתה משתמש ב'מטריצת Contact Ways' המנתחת תנועה על רצף שבין Under (תת-תגובה/ניתוק), Flow (זרימה אינטגרטיבית) ו-Over (תגובת יתר/השתלטות). ענה בצורה אמפתית, מקצועית ומעוררת מחשבה.\n`;
+            promptText += `התייחס בתשובתך בסגנון של דמות ההוראה: ${teacher}.\n\n`;
             
-            let dataContext = `להלן הנתונים שנאספו מהסשן האחרון:\n`;
+            // 2. Contextual Data
+            promptText += `המטרה: להלן הנתונים שנאספו מהסשן האחרון של המשתמש. האפליקציה המירה את מיקומי הסליידרים (0-100) לתיאורים מילוליים מהמטריצה:\n\n`;
+            
             Object.keys(matrixSchema).forEach(id => {
                 const schema = matrixSchema[id];
                 const val = currentSession[id];
                 let state, desc;
-                if (val < 35) { state = "Under"; desc = schema.under.text; }
-                else if (val > 65) { state = "Over"; desc = schema.over.text; }
-                else { state = "Flow"; desc = schema.flow.text; }
+                if (val < 35) { 
+                    state = "Under"; 
+                    desc = schema.under.text; 
+                } else if (val > 65) { 
+                    state = "Over"; 
+                    desc = schema.over.text; 
+                } else { 
+                    state = "Flow"; 
+                    desc = schema.flow.text; 
+                }
                 
-                dataContext += `${schema.label}: המשתמש דיווח על מצב ${state} (${desc}).\n`;
+                promptText += `- ${schema.label}:\n`;
+                promptText += `  המשתמש דיווח על מצב [${state}] (תיאור המצב שנבחר: ${desc}).\n`;
+                promptText += `  (מהות הפרמטר: ${schema.description})\n\n`;
             });
 
-            const fullPrompt = `${systemInstr}\n\n${dataContext}\n\nשאלת המשתמש: ${query}`;
-            document.getElementById('prompt-preview').innerText = fullPrompt;
+            // 3. User Query
+            promptText += `שאלת המשתמש:\n"${query}"`;
+            
+            document.getElementById('prompt-preview').innerText = promptText;
         }
 
         function copyPrompt() {
             const txt = document.getElementById('prompt-preview').innerText;
             navigator.clipboard.writeText(txt).then(() => {
-                alert("הפרומפט הועתק! פתח כעת מודל AI והדבק אותו.");
-                window.open("https://chat.openai.com", "_blank");
+                alert("הפרומפט הועתק בהצלחה! פתח כעת מודל AI (כגון ChatGPT או Claude) והדבק אותו שם.");
             });
         }
 
         // --- NAVIGATION ---
         function switchTab(tab) {
-            ['input', 'ai', 'history'].forEach(t => {
+            ['input', 'ai'].forEach(t => {
                 document.getElementById(`section-${t}`).classList.add('hidden');
                 document.getElementById(`tab-${t}`).classList.remove('tab-active');
+                document.getElementById(`tab-${t}`).classList.add('text-slate-500');
             });
             document.getElementById(`section-${tab}`).classList.remove('hidden');
             document.getElementById(`tab-${tab}`).classList.add('tab-active');
-        }
-
-        function saveSession() {
-            const entry = {
-                date: new Date().toISOString(),
-                data: {...currentSession}
-            };
-            history.push(entry);
-            localStorage.setItem('cw_v2_history', JSON.stringify(history));
-            alert("הסשן נשמר במערכת.");
+            document.getElementById(`tab-${tab}`).classList.remove('text-slate-500');
         }
     </script>
 </body>
