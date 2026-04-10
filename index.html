@@ -273,205 +273,223 @@
     <!-- Help Modal: Data Management -->
     <div id="modal-help-data" class="fixed inset-0 z-[150] bg-slate-950/60 p-6 flex items-end justify-center backdrop-blur-sm hidden" onclick="closeModal('help-data')">
         <div class="bg-white rounded-[2rem] w-full max-w-lg shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-200 max-h-[85vh] flex flex-col" onclick="event.stopPropagation()">
-            <div class="p-6 bg-indigo-50 border-b border-indigo-100 flex justify-between items-center flex-shrink-0">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center">
-                        <i data-lucide="help-circle" class="w-5 h-5 text-white"></i>
-                    </div>
-                    <h3 class="text-xl font-black text-slate-900">עזרה — ניהול נתונים</h3>
-                </div>
-                <button onclick="closeModal('help-data')" class="p-2 bg-slate-200 hover:bg-slate-300 rounded-full text-slate-800 transition-colors shadow-sm">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-            <div class="p-6 overflow-y-auto no-scrollbar space-y-5 dir-text-start">
-
-                <div class="bg-indigo-50 rounded-2xl p-4 border border-indigo-100">
-                    <h4 class="font-black text-indigo-800 text-base mb-1 flex items-center gap-2">
-                        <i data-lucide="clock" class="w-4 h-4"></i> נתונים אישיים (היסטוריה)
-                    </h4>
-                    <p class="text-sm text-slate-700 leading-relaxed mb-3">כל לחיצה על <strong>"שמירת איטרציה"</strong> שומרת תמונת מצב של כל הסליידרים עם חותמת זמן. הנתונים נשמרים אוטומטית בדפדפן (localStorage) ונשארים גם אחרי סגירת הדף.</p>
-                    <div class="space-y-2 text-sm">
-                        <div class="flex items-start gap-2 bg-white rounded-xl p-3 border border-indigo-100">
-                            <i data-lucide="download" class="w-4 h-4 text-indigo-500 mt-0.5 flex-shrink-0"></i>
-                            <div>
-                                <span class="font-bold text-slate-800">ייצוא נתונים אישיים</span>
-                                <p class="text-slate-500 mt-0.5">מוריד קובץ <code class="bg-slate-100 px-1 rounded text-xs">contact_ways_history.json</code> לגיבוי או העברה. מכיל את כל ההיסטוריה השמורה.</p>
-                            </div>
-                        </div>
-                        <div class="flex items-start gap-2 bg-white rounded-xl p-3 border border-indigo-100">
-                            <i data-lucide="upload" class="w-4 h-4 text-indigo-500 mt-0.5 flex-shrink-0"></i>
-                            <div>
-                                <span class="font-bold text-slate-800">ייבוא נתונים אישיים</span>
-                                <p class="text-slate-500 mt-0.5">טוען קובץ JSON שיוצא קודם. הנתונים המיובאים <strong>מצטרפים</strong> לנתונים הקיימים — לא מחליפים אותם. מועיל להעברה בין מכשירים.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-emerald-50 rounded-2xl p-4 border border-emerald-100">
-                    <h4 class="font-black text-emerald-800 text-base mb-1 flex items-center gap-2">
-                        <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> תבנית שאלון
-                    </h4>
-                    <p class="text-sm text-slate-700 leading-relaxed mb-3">ניתן להחליף את סט הפרמטרים המוצגים (הסליידרים) בשאלון מותאם אישית לחלוטין — לסגנון ריקוד אחר, לכיתה, לפרויקט.</p>
-                    <div class="space-y-2 text-sm">
-                        <div class="flex items-start gap-2 bg-white rounded-xl p-3 border border-emerald-100">
-                            <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0"></i>
-                            <div>
-                                <span class="font-bold text-slate-800">ייצוא שאלון לגוגל שיטס</span>
-                                <p class="text-slate-500 mt-0.5">מוריד קובץ <code class="bg-slate-100 px-1 rounded text-xs">questionnaire_template.csv</code> עם כל הפרמטרים הנוכחיים. ניתן לפתוח ב-Google Sheets, לערוך שמות, תיאורים ומצבים ולשמור.</p>
-                            </div>
-                        </div>
-                        <div class="flex items-start gap-2 bg-white rounded-xl p-3 border border-emerald-100">
-                            <i data-lucide="upload" class="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0"></i>
-                            <div>
-                                <span class="font-bold text-slate-800">ייבוא שאלון מותאם</span>
-                                <p class="text-slate-500 mt-0.5">טוען קובץ CSV ערוך ו<strong>מחליף</strong> את השאלון הנוכחי. שמור גיבוי לפני כן! הפורמט חייב לכלול את העמודות המקוריות.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-amber-50 rounded-2xl p-4 border border-amber-100 text-sm">
-                    <p class="font-bold text-amber-800 flex items-center gap-2 mb-1"><i data-lucide="alert-triangle" class="w-4 h-4"></i> שים לב</p>
-                    <p class="text-amber-900/80">ניקוי cache של הדפדפן <strong>ימחק</strong> את ההיסטוריה השמורה. מומלץ לייצא גיבוי מדי פעם.</p>
-                </div>
-            </div>
-            <div class="p-5 border-t border-slate-100 flex-shrink-0">
-                <button onclick="closeModal('help-data')" class="w-full py-3.5 bg-slate-900 text-white rounded-xl font-black hover:bg-slate-800 transition-colors">הבנתי</button>
-            </div>
+            <div id="help-data-inner"></div>
         </div>
     </div>
 
     <!-- Help Modal: AI Consultation -->
     <div id="modal-help-ai" class="fixed inset-0 z-[150] bg-slate-950/60 p-6 flex items-end justify-center backdrop-blur-sm hidden" onclick="closeModal('help-ai')">
         <div class="bg-white rounded-[2rem] w-full max-w-lg shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-200 max-h-[85vh] flex flex-col" onclick="event.stopPropagation()">
-            <div class="p-6 bg-indigo-600 flex justify-between items-center flex-shrink-0">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                        <i data-lucide="help-circle" class="w-5 h-5 text-white"></i>
-                    </div>
-                    <h3 class="text-xl font-black text-white">עזרה — ייעוץ AI</h3>
-                </div>
-                <button onclick="closeModal('help-ai')" class="p-2 bg-white rounded-full text-indigo-700 hover:bg-indigo-50 transition-colors shadow-md">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-            <div class="p-6 overflow-y-auto no-scrollbar space-y-5 dir-text-start">
-
-                <div class="bg-indigo-50 rounded-2xl p-4 border border-indigo-100">
-                    <h4 class="font-black text-indigo-800 text-base mb-2 flex items-center gap-2">
-                        <i data-lucide="zap" class="w-4 h-4"></i> איך זה עובד?
-                    </h4>
-                    <p class="text-sm text-slate-700 leading-relaxed">המערכת בונה <strong>פרומפט מובנה</strong> המכיל את כל נתוני הסשן הנוכחי שלך — עם הגדרת כל פרמטר ותיאור המצב שנבחר (Under / Flow / Over). הפרומפט מוכן להדבקה ישירה בכל AI.</p>
-                </div>
-
-                <div class="space-y-3">
-                    <h4 class="font-black text-slate-800 text-sm uppercase tracking-wider">שלבי השימוש</h4>
-
-                    <div class="flex items-start gap-3 bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                        <div class="w-7 h-7 bg-indigo-600 text-white rounded-full flex items-center justify-center text-sm font-black flex-shrink-0">1</div>
-                        <div>
-                            <p class="font-bold text-slate-800 text-sm">בחר מומחה / דמות הוראה</p>
-                            <p class="text-slate-500 text-sm mt-0.5">כל בחירה מכוונת את ה-AI לענות בסגנון ובעולם המושגים של אותה דמות — Steve Paxton, Nancy Stark Smith וכו'. "ניתוח כללי" הוא ניטרלי ומקצועי.</p>
-                        </div>
-                    </div>
-
-                    <div class="flex items-start gap-3 bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                        <div class="w-7 h-7 bg-indigo-600 text-white rounded-full flex items-center justify-center text-sm font-black flex-shrink-0">2</div>
-                        <div>
-                            <p class="font-bold text-slate-800 text-sm">הוסף שאלה אישית (אופציונלי)</p>
-                            <p class="text-slate-500 text-sm mt-0.5">תאר תחושה, אתגר או שאלה ספציפית מהסשן. לדוגמה: <em>"הרגשתי שאני נמנעת ממתן משקל — למה?"</em> או <em>"מה אני יכול לעבוד עליו בסשן הבא?"</em></p>
-                        </div>
-                    </div>
-
-                    <div class="flex items-start gap-3 bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                        <div class="w-7 h-7 bg-indigo-600 text-white rounded-full flex items-center justify-center text-sm font-black flex-shrink-0">3</div>
-                        <div>
-                            <p class="font-bold text-slate-800 text-sm">קרא את התצוגה המקדימה</p>
-                            <p class="text-slate-500 text-sm mt-0.5">הפרומפט מתעדכן בזמן אמת. תוכל לראות בדיוק מה ישלח ל-AI — כולל הגדרות כל פרמטר ומצבי Under/Flow/Over.</p>
-                        </div>
-                    </div>
-
-                    <div class="flex items-start gap-3 bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                        <div class="w-7 h-7 bg-indigo-600 text-white rounded-full flex items-center justify-center text-sm font-black flex-shrink-0">4</div>
-                        <div>
-                            <p class="font-bold text-slate-800 text-sm">לחץ על הכפתור הכחול</p>
-                            <p class="text-slate-500 text-sm mt-0.5">הפרומפט <strong>יועתק אוטומטית ללוח</strong>. לאחר מכן בחר AI (ChatGPT / Gemini / Claude) — הדפדפן יפתח אותו, והדבק עם Ctrl+V / ⌘V.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-emerald-50 rounded-2xl p-4 border border-emerald-100 text-sm">
-                    <p class="font-bold text-emerald-800 flex items-center gap-2 mb-1"><i data-lucide="lightbulb" class="w-4 h-4"></i> טיפ</p>
-                    <p class="text-emerald-900/80">לתוצאות הטובות ביותר — מלא את הסליידרים מיד אחרי הסשן, כשהזיכרון הגופני עדיין טרי. שמור איטרציה לפני הייעוץ כדי שהנתונים יופיעו גם בהיסטוריה.</p>
-                </div>
-            </div>
-            <div class="p-5 border-t border-slate-100 flex-shrink-0">
-                <button onclick="closeModal('help-ai')" class="w-full py-3.5 bg-indigo-600 text-white rounded-xl font-black hover:bg-indigo-700 transition-colors">הבנתי, בואו נתחיל</button>
-            </div>
+            <div id="help-ai-inner"></div>
         </div>
     </div>
 
-    <!-- Help Modal: History / Data View -->
+    <!-- Help Modal: History -->
     <div id="modal-help-history" class="fixed inset-0 z-[150] bg-slate-950/60 p-6 flex items-end justify-center backdrop-blur-sm hidden" onclick="closeModal('help-history')">
         <div class="bg-white rounded-[2rem] w-full max-w-lg shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-200 max-h-[85vh] flex flex-col" onclick="event.stopPropagation()">
-            <div class="p-6 bg-indigo-600 flex justify-between items-center flex-shrink-0">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                        <i data-lucide="layout-grid" class="w-5 h-5 text-white"></i>
-                    </div>
-                    <h3 class="text-xl font-black text-white">עזרה — הצגת נתונים</h3>
-                </div>
-                <button onclick="closeModal('help-history')" class="p-2 bg-white rounded-full text-indigo-700 hover:bg-indigo-50 transition-colors shadow-md">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-            <div class="p-6 overflow-y-auto no-scrollbar space-y-4 dir-text-start">
-
-                <p class="text-sm text-slate-600 leading-relaxed">חלון זה מציג את כל הנתונים שנשמרו לאורך הזמן, בשלוש תצוגות שונות:</p>
-
-                <div class="space-y-3">
-
-                    <div class="bg-indigo-50 rounded-2xl p-4 border border-indigo-100">
-                        <h4 class="font-black text-indigo-800 text-base mb-1 flex items-center gap-2">
-                            <i data-lucide="radio" class="w-4 h-4"></i> תצוגה בודדת — מפת רדאר
-                        </h4>
-                        <p class="text-sm text-slate-700 leading-relaxed">מציגה את נתוני סשן אחד כגרף רדאר (עכבה). כל ציר מייצג פרמטר — ככל שהנקודה קרובה יותר למרכז, כך הערך נמוך יותר (Under). ניתן לדפדף בין איטרציות שמורות עם חצים, או לצפות בנתונים הנוכחיים (LIVE).</p>
-                    </div>
-
-                    <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200">
-                        <h4 class="font-black text-slate-800 text-base mb-1 flex items-center gap-2">
-                            <i data-lucide="layers" class="w-4 h-4 text-indigo-500"></i> תצוגת Overlay — השוואה
-                        </h4>
-                        <p class="text-sm text-slate-700 leading-relaxed">מציגה עד 4 סשנים אחרונים <strong>זה על גבי זה</strong> באותו גרף רדאר. מועיל לראות שינויים לאורך זמן — כיצד פרמטרים מסוימים השתנו מסשן לסשן.</p>
-                    </div>
-
-                    <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200">
-                        <h4 class="font-black text-slate-800 text-base mb-1 flex items-center gap-2">
-                            <i data-lucide="table" class="w-4 h-4 text-indigo-500"></i> טבלת נתונים — מספרים גולמיים
-                        </h4>
-                        <p class="text-sm text-slate-700 leading-relaxed">מציגה את כל הפרמטרים בכל הסשנים בטבלה אופקית. הצבעים מסמנים: <span class="font-bold text-amber-600">כתום = Under</span>, <span class="font-bold text-indigo-600">סגול = Flow</span>, <span class="font-bold text-rose-500">אדום = Over</span>.</p>
-                    </div>
-
-                </div>
-
-                <div class="bg-emerald-50 rounded-2xl p-4 border border-emerald-100 text-sm">
-                    <p class="font-bold text-emerald-800 flex items-center gap-2 mb-1"><i data-lucide="lightbulb" class="w-4 h-4"></i> טיפ</p>
-                    <p class="text-emerald-900/80">לחץ על כפתור <strong>"שמירת איטרציה"</strong> בסוף כל סשן כדי שהנתונים יופיעו כאן. ניתן גם לשתף את גרף הרדאר כתמונה.</p>
-                </div>
-
-            </div>
-            <div class="p-5 border-t border-slate-100 flex-shrink-0">
-                <button onclick="closeModal('help-history')" class="w-full py-3.5 bg-indigo-600 text-white rounded-xl font-black hover:bg-indigo-700 transition-colors">הבנתי</button>
-            </div>
+            <div id="help-history-inner"></div>
         </div>
     </div>
+
+    <!-- Help Modals rendered by JS via renderHelpModals() -->
 
     <script>
         // --- SAFE LUCIDE WRAPPER ---
         function safeCreateIcons() {
             if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        // --- HELP MODALS (bilingual) ---
+        function renderHelpModals() {
+            const he = lang === 'he';
+            const xBtn = (id) => `<button onclick="closeModal('${id}')" class="p-2 bg-white rounded-full text-indigo-700 hover:bg-indigo-50 transition-colors shadow-md"><i data-lucide="x" class="w-5 h-5"></i></button>`;
+            const xBtnDark = (id) => `<button onclick="closeModal('${id}')" class="p-2 bg-slate-200 hover:bg-slate-300 rounded-full text-slate-800 transition-colors shadow-sm"><i data-lucide="x" class="w-5 h-5"></i></button>`;
+
+            // --- HELP DATA ---
+            document.getElementById('help-data-inner').innerHTML = `
+                <div class="p-6 bg-indigo-50 border-b border-indigo-100 flex justify-between items-center flex-shrink-0">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center"><i data-lucide="help-circle" class="w-5 h-5 text-white"></i></div>
+                        <h3 class="text-xl font-black text-slate-900">${he ? 'עזרה — ניהול נתונים' : 'Help — Data Management'}</h3>
+                    </div>
+                    ${xBtnDark('help-data')}
+                </div>
+                <div class="p-6 overflow-y-auto no-scrollbar space-y-5 dir-text-start">
+                    <div class="bg-indigo-50 rounded-2xl p-4 border border-indigo-100">
+                        <h4 class="font-black text-indigo-800 text-base mb-1 flex items-center gap-2">
+                            <i data-lucide="clock" class="w-4 h-4"></i> ${he ? 'נתונים אישיים (היסטוריה)' : 'Personal Data (History)'}
+                        </h4>
+                        <p class="text-sm text-slate-700 leading-relaxed mb-3">
+                            ${he
+                                ? 'כל לחיצה על <strong>"שמירת איטרציה"</strong> שומרת תמונת מצב של כל הסליידרים עם חותמת זמן. הנתונים נשמרים אוטומטית בדפדפן (localStorage) ונשארים גם אחרי סגירת הדף.'
+                                : 'Each tap of <strong>"Save Iteration"</strong> stores a snapshot of all sliders with a timestamp. Data is saved automatically in the browser (localStorage) and persists after closing the page.'}
+                        </p>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex items-start gap-2 bg-white rounded-xl p-3 border border-indigo-100">
+                                <i data-lucide="download" class="w-4 h-4 text-indigo-500 mt-0.5 flex-shrink-0"></i>
+                                <div>
+                                    <span class="font-bold text-slate-800">${he ? 'ייצוא נתונים אישיים' : 'Export Personal Data'}</span>
+                                    <p class="text-slate-500 mt-0.5">${he
+                                        ? 'מוריד קובץ <code class="bg-slate-100 px-1 rounded text-xs">contact_ways_history.json</code> לגיבוי או העברה. מכיל את כל ההיסטוריה השמורה.'
+                                        : 'Downloads a <code class="bg-slate-100 px-1 rounded text-xs">contact_ways_history.json</code> file for backup or transfer. Contains your full saved history.'}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-2 bg-white rounded-xl p-3 border border-indigo-100">
+                                <i data-lucide="upload" class="w-4 h-4 text-indigo-500 mt-0.5 flex-shrink-0"></i>
+                                <div>
+                                    <span class="font-bold text-slate-800">${he ? 'ייבוא נתונים אישיים' : 'Import Personal Data'}</span>
+                                    <p class="text-slate-500 mt-0.5">${he
+                                        ? 'טוען קובץ JSON שיוצא קודם. הנתונים המיובאים <strong>מצטרפים</strong> לנתונים הקיימים — לא מחליפים אותם. מועיל להעברה בין מכשירים.'
+                                        : 'Loads a previously exported JSON file. Imported data <strong>merges</strong> with existing data — it does not replace it. Useful for transferring between devices.'}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-emerald-50 rounded-2xl p-4 border border-emerald-100">
+                        <h4 class="font-black text-emerald-800 text-base mb-1 flex items-center gap-2">
+                            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> ${he ? 'תבנית שאלון' : 'Questionnaire Template'}
+                        </h4>
+                        <p class="text-sm text-slate-700 leading-relaxed mb-3">
+                            ${he
+                                ? 'ניתן להחליף את סט הפרמטרים המוצגים (הסליידרים) בשאלון מותאם אישית לחלוטין — לסגנון ריקוד אחר, לכיתה, לפרויקט.'
+                                : 'You can fully replace the displayed parameters (sliders) with a custom questionnaire — for a different dance style, a class, or a project.'}
+                        </p>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex items-start gap-2 bg-white rounded-xl p-3 border border-emerald-100">
+                                <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0"></i>
+                                <div>
+                                    <span class="font-bold text-slate-800">${he ? 'ייצוא שאלון לגוגל שיטס' : 'Export Questionnaire to Google Sheets'}</span>
+                                    <p class="text-slate-500 mt-0.5">${he
+                                        ? 'מוריד קובץ <code class="bg-slate-100 px-1 rounded text-xs">questionnaire_template.csv</code> עם כל הפרמטרים הנוכחיים. ניתן לפתוח ב-Google Sheets, לערוך שמות, תיאורים ומצבים ולשמור.'
+                                        : 'Downloads a <code class="bg-slate-100 px-1 rounded text-xs">questionnaire_template.csv</code> with all current parameters. Open in Google Sheets, edit names, descriptions and states, then save.'}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-2 bg-white rounded-xl p-3 border border-emerald-100">
+                                <i data-lucide="upload" class="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0"></i>
+                                <div>
+                                    <span class="font-bold text-slate-800">${he ? 'ייבוא שאלון מותאם' : 'Import Custom Questionnaire'}</span>
+                                    <p class="text-slate-500 mt-0.5">${he
+                                        ? 'טוען קובץ CSV ערוך ו<strong>מחליף</strong> את השאלון הנוכחי. שמור גיבוי לפני כן! הפורמט חייב לכלול את העמודות המקוריות.'
+                                        : 'Loads an edited CSV and <strong>replaces</strong> the current questionnaire. Back up first! The format must include all original columns.'}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-amber-50 rounded-2xl p-4 border border-amber-100 text-sm">
+                        <p class="font-bold text-amber-800 flex items-center gap-2 mb-1"><i data-lucide="alert-triangle" class="w-4 h-4"></i> ${he ? 'שים לב' : 'Note'}</p>
+                        <p class="text-amber-900/80">${he
+                            ? 'ניקוי cache של הדפדפן <strong>ימחק</strong> את ההיסטוריה השמורה. מומלץ לייצא גיבוי מדי פעם.'
+                            : 'Clearing your browser cache <strong>will delete</strong> saved history. Export a backup regularly.'}</p>
+                    </div>
+                </div>
+                <div class="p-5 border-t border-slate-100 flex-shrink-0">
+                    <button onclick="closeModal('help-data')" class="w-full py-3.5 bg-slate-900 text-white rounded-xl font-black hover:bg-slate-800 transition-colors">${he ? 'הבנתי' : 'Got it'}</button>
+                </div>`;
+
+            // --- HELP AI ---
+            document.getElementById('help-ai-inner').innerHTML = `
+                <div class="p-6 bg-indigo-600 flex justify-between items-center flex-shrink-0">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center"><i data-lucide="help-circle" class="w-5 h-5 text-white"></i></div>
+                        <h3 class="text-xl font-black text-white">${he ? 'עזרה — ייעוץ AI' : 'Help — AI Consultation'}</h3>
+                    </div>
+                    ${xBtn('help-ai')}
+                </div>
+                <div class="p-6 overflow-y-auto no-scrollbar space-y-5 dir-text-start">
+                    <div class="bg-indigo-50 rounded-2xl p-4 border border-indigo-100">
+                        <h4 class="font-black text-indigo-800 text-base mb-2 flex items-center gap-2">
+                            <i data-lucide="zap" class="w-4 h-4"></i> ${he ? 'איך זה עובד?' : 'How does it work?'}
+                        </h4>
+                        <p class="text-sm text-slate-700 leading-relaxed">${he
+                            ? 'המערכת בונה <strong>פרומפט מובנה</strong> המכיל את כל נתוני הסשן הנוכחי שלך — עם הגדרת כל פרמטר ותיאור המצב שנבחר (Under / Flow / Over). הפרומפט מוכן להדבקה ישירה בכל AI.'
+                            : 'The system builds a <strong>structured prompt</strong> containing all your current session data — including each parameter\'s definition and its selected state (Under / Flow / Over). The prompt is ready to paste into any AI.'}</p>
+                    </div>
+                    <div class="space-y-3">
+                        <h4 class="font-black text-slate-800 text-sm uppercase tracking-wider">${he ? 'שלבי השימוש' : 'How to use'}</h4>
+                        ${[
+                            [he ? 'בחר מומחה / דמות הוראה' : 'Select an expert / teaching figure',
+                             he ? 'כל בחירה מכוונת את ה-AI לענות בסגנון ובעולם המושגים של אותה דמות — Steve Paxton, Nancy Stark Smith וכו\'. "ניתוח כללי" הוא ניטרלי ומקצועי.'
+                                : 'Each choice directs the AI to respond in the style and conceptual world of that figure — Steve Paxton, Nancy Stark Smith, etc. "General Analysis" is neutral and professional.'],
+                            [he ? 'הוסף שאלה אישית (אופציונלי)' : 'Add a personal question (optional)',
+                             he ? 'תאר תחושה, אתגר או שאלה ספציפית מהסשן. לדוגמה: <em>"הרגשתי שאני נמנעת ממתן משקל — למה?"</em>'
+                                : 'Describe a feeling, challenge or specific question from the session. E.g., <em>"I felt I was avoiding giving weight — why?"</em>'],
+                            [he ? 'קרא את התצוגה המקדימה' : 'Read the prompt preview',
+                             he ? 'הפרומפט מתעדכן בזמן אמת. תוכל לראות בדיוק מה ישלח ל-AI — כולל הגדרות כל פרמטר ומצבי Under/Flow/Over.'
+                                : 'The prompt updates in real time. You can see exactly what will be sent to the AI — including each parameter\'s definition and Under/Flow/Over states.'],
+                            [he ? 'לחץ על הכפתור הכחול' : 'Tap the blue button',
+                             he ? 'הפרומפט <strong>יועתק אוטומטית ללוח</strong>. לאחר מכן בחר AI (ChatGPT / Gemini / Claude) — הדפדפן יפתח אותו, והדבק עם Ctrl+V / ⌘V.'
+                                : 'The prompt is <strong>automatically copied to clipboard</strong>. Then choose an AI (ChatGPT / Gemini / Claude) — the browser opens it. Paste with Ctrl+V / ⌘V.']
+                        ].map(([title, desc], i) => `
+                            <div class="flex items-start gap-3 bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                                <div class="w-7 h-7 bg-indigo-600 text-white rounded-full flex items-center justify-center text-sm font-black flex-shrink-0">${i+1}</div>
+                                <div>
+                                    <p class="font-bold text-slate-800 text-sm">${title}</p>
+                                    <p class="text-slate-500 text-sm mt-0.5">${desc}</p>
+                                </div>
+                            </div>`).join('')}
+                    </div>
+                    <div class="bg-emerald-50 rounded-2xl p-4 border border-emerald-100 text-sm">
+                        <p class="font-bold text-emerald-800 flex items-center gap-2 mb-1"><i data-lucide="lightbulb" class="w-4 h-4"></i> ${he ? 'טיפ' : 'Tip'}</p>
+                        <p class="text-emerald-900/80">${he
+                            ? 'לתוצאות הטובות ביותר — מלא את הסליידרים מיד אחרי הסשן, כשהזיכרון הגופני עדיין טרי. שמור איטרציה לפני הייעוץ כדי שהנתונים יופיעו גם בהיסטוריה.'
+                            : 'For best results — fill in the sliders right after the session, while somatic memory is still fresh. Save an iteration before consulting so the data also appears in history.'}</p>
+                    </div>
+                </div>
+                <div class="p-5 border-t border-slate-100 flex-shrink-0">
+                    <button onclick="closeModal('help-ai')" class="w-full py-3.5 bg-indigo-600 text-white rounded-xl font-black hover:bg-indigo-700 transition-colors">${he ? 'הבנתי, בואו נתחיל' : "Got it, let's start"}</button>
+                </div>`;
+
+            // --- HELP HISTORY ---
+            document.getElementById('help-history-inner').innerHTML = `
+                <div class="p-6 bg-indigo-600 flex justify-between items-center flex-shrink-0">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center"><i data-lucide="layout-grid" class="w-5 h-5 text-white"></i></div>
+                        <h3 class="text-xl font-black text-white">${he ? 'עזרה — הצגת נתונים' : 'Help — Data View'}</h3>
+                    </div>
+                    ${xBtn('help-history')}
+                </div>
+                <div class="p-6 overflow-y-auto no-scrollbar space-y-4 dir-text-start">
+                    <p class="text-sm text-slate-600 leading-relaxed">${he
+                        ? 'חלון זה מציג את כל הנתונים שנשמרו לאורך הזמן, בשלוש תצוגות שונות:'
+                        : 'This window displays all saved session data over time, in three different views:'}</p>
+                    <div class="space-y-3">
+                        <div class="bg-indigo-50 rounded-2xl p-4 border border-indigo-100">
+                            <h4 class="font-black text-indigo-800 text-base mb-1 flex items-center gap-2">
+                                <i data-lucide="radio" class="w-4 h-4"></i> ${he ? 'תצוגה בודדת — מפת רדאר' : 'Single View — Radar Map'}
+                            </h4>
+                            <p class="text-sm text-slate-700 leading-relaxed">${he
+                                ? 'מציגה את נתוני סשן אחד כגרף רדאר. כל ציר מייצג פרמטר — ככל שהנקודה קרובה יותר למרכז, כך הערך נמוך יותר (Under). ניתן לדפדף בין איטרציות שמורות עם חצים, או לצפות בנתונים הנוכחיים (LIVE).'
+                                : 'Displays one session\'s data as a radar chart. Each axis represents a parameter — the closer the point to the center, the lower the value (Under). Navigate between saved iterations using arrows, or view the current live data.'}</p>
+                        </div>
+                        <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                            <h4 class="font-black text-slate-800 text-base mb-1 flex items-center gap-2">
+                                <i data-lucide="layers" class="w-4 h-4 text-indigo-500"></i> ${he ? 'תצוגת Overlay — השוואה' : 'Overlay View — Comparison'}
+                            </h4>
+                            <p class="text-sm text-slate-700 leading-relaxed">${he
+                                ? 'מציגה עד 4 סשנים אחרונים <strong>זה על גבי זה</strong> באותו גרף רדאר. מועיל לראות שינויים לאורך זמן.'
+                                : 'Displays up to 4 recent sessions <strong>layered on top of each other</strong> in the same radar chart. Useful for seeing changes over time.'}</p>
+                        </div>
+                        <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                            <h4 class="font-black text-slate-800 text-base mb-1 flex items-center gap-2">
+                                <i data-lucide="table" class="w-4 h-4 text-indigo-500"></i> ${he ? 'טבלת נתונים — מספרים גולמיים' : 'Data Table — Raw Numbers'}
+                            </h4>
+                            <p class="text-sm text-slate-700 leading-relaxed">${he
+                                ? 'מציגה את כל הפרמטרים בכל הסשנים בטבלה אופקית. הצבעים: <span class="font-bold text-amber-600">כתום = Under</span>, <span class="font-bold text-indigo-600">סגול = Flow</span>, <span class="font-bold text-rose-500">אדום = Over</span>.'
+                                : 'Displays all parameters across all sessions in a horizontal table. Colors: <span class="font-bold text-amber-600">Orange = Under</span>, <span class="font-bold text-indigo-600">Purple = Flow</span>, <span class="font-bold text-rose-500">Red = Over</span>.'}</p>
+                        </div>
+                    </div>
+                    <div class="bg-emerald-50 rounded-2xl p-4 border border-emerald-100 text-sm">
+                        <p class="font-bold text-emerald-800 flex items-center gap-2 mb-1"><i data-lucide="lightbulb" class="w-4 h-4"></i> ${he ? 'טיפ' : 'Tip'}</p>
+                        <p class="text-emerald-900/80">${he
+                            ? 'לחץ על <strong>"שמירת איטרציה"</strong> בסוף כל סשן כדי שהנתונים יופיעו כאן. ניתן גם לשתף את גרף הרדאר כתמונה.'
+                            : 'Tap <strong>"Save Iteration"</strong> at the end of each session for the data to appear here. You can also share the radar chart as an image.'}</p>
+                    </div>
+                </div>
+                <div class="p-5 border-t border-slate-100 flex-shrink-0">
+                    <button onclick="closeModal('help-history')" class="w-full py-3.5 bg-indigo-600 text-white rounded-xl font-black hover:bg-indigo-700 transition-colors">${he ? 'הבנתי' : 'Got it'}</button>
+                </div>`;
+
+            safeCreateIcons();
         }
 
         // --- DATA & STATE ---
@@ -642,6 +660,7 @@
             renderSliders();
             renderHistoryView();
             refreshPromptPreview();
+            renderHelpModals();
             safeCreateIcons();
         }
 
