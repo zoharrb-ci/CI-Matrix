@@ -1,908 +1,204 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { 
-  ChevronDown, Info, Clock, Users, Activity, Save, 
-  CheckCircle2, X, HelpCircle, BookOpen, Download, Upload,
-  History, Share2, MessageSquare, ChevronRight, ChevronLeft,
-  FileSpreadsheet, Zap, Target, LayoutGrid, ExternalLink,
-  MessageSquarePlus, Mail, BarChart3, Table, Layers, Camera
-} from 'lucide-react';
-
-const App = () => {
-  const [lang, setLang] = useState('he');
-  const [helpContent, setHelpContent] = useState(null);
-  const [responses, setResponses] = useState({});
-  const [activeTab, setActiveTab] = useState('mechanics');
-  const [isSaved, setIsSaved] = useState(false);
-  const [history, setHistory] = useState([]);
-  const [viewedIterationIndex, setViewedIterationIndex] = useState(0);
-  const [showMatrixView, setShowMatrixView] = useState(false);
-  const [historyViewMode, setHistoryViewMode] = useState('single');
-  const [showDataMenu, setShowDataMenu] = useState(false);
-  const [showAiModal, setShowAiModal] = useState(false);
-  const [selectedExpert, setSelectedExpert] = useState('general');
-  const [customAIRequest, setCustomAIRequest] = useState('');
-  
-  const fileInputRef = useRef(null); 
-  const dataInputRef = useRef(null); 
-
-  const t = {
-    he: {
-      title: "Contact Ways",
-      subtitle: "מיפוי מיומנויות פיזיות ומנטליות בקונטאקט",
-      about: "אודות הכלי",
-      history: "הצגת נתונים",
-      data: "ניהול נתונים",
-      ai: "ניתוח מומחים (AI)",
-      save: "שמירת איטרציה",
-      saved: "הנתונים נשמרו",
-      viewMatrix: "הצגת נתונים",
-      saveImage: "שמור תמונה",
-      shareApp: "שתף אפליקציה",
-      shareResult: "שתף תוצאה",
-      selectAxis: "בחר ציר משוב",
-      linkCopied: "הקישור לאפליקציה הועתק ללוח!",
-      resultCopied: "התוצאות הועתקו ללוח!",
-      optionalNote: "אין חובה לענות על הכל, אך כל נתון נוסף מדייק את הניתוח.",
-      experts: {
-        general: "ניתוח כללי",
-        steve: "Steve Paxton (התבוננות פנורמית)",
-        nancy: "Nancy Stark Smith (הקציר וה-Underscore)",
-        ray: "Ray Chung (פיזיקה ודינמיקה)",
-        karen: "Karen Nelson (כיוונון סומטי)",
-        daniel: "Daniel Lepkoff (קומפוזיציה ותפקוד)",
-        martin: "Martin Keogh (מטאפורות ופיזיות)",
-        nita: "Nita Little (תקשורת תאית)",
-        kj: "KJ Holmes (אלתור רב-ממדי)",
-        andrew: "Andrew Harwood (טכניקה וביצוע)",
-        julian: "Julian Hamilton (מרחב וזמן)",
-        angela: "Angela Doniy (הקשבה רוסית)"
-      },
-      info: {
-        about: `מערכת Contact Ways נסמכת על שילוב בין מחקר בתחום הסנכרון הלא-מילולי (Nonverbal Synchrony) ותיאוריות של יצירת משמעות משותפת (Participatory Sense-making).\n\nהכלי נועד לתמוך בפיצוח מיומנויות פיזיות, מנטליות ורגשיות בריקוד קונטאקט אימפרוביזציה. ניתן כמובן ליישם את הכלי לאינטראקציות דיאדיות פיזיות נוספות.\n\nהמערכת בנויה ל-3 רמות שימוש:\n1. קריאה כללית של הפרמטרים היוצרת המשגה של חווית הריקוד.\n2. רפלקציה לאחר הריקוד.\n3. מיקוד לריקוד הבא.\n\n**התאמה אישית:** ניתן להתאים את סט השאלות המנחות באופן מלא דרך תפריט "ניהול נתונים", על ידי הורדת הקובץ, עריכתו ב-Google Sheets והעלאתו מחדש.\n\n**על היוצר:**\nזוהר רבינוביץ' - הרפתקן, מכור לאתגרים. היום אני בוחר אותם ברכות ומודה בנימוס לאלה שלא נבחרו. מנחה אילתור וקונטקט משנת 1994. בוגר החוג לתנועה באקדמיה ע"ש רובין בירושלים, לימודי תנועה מתקדמים עם פרופ' עמוס חץ, השתלמתי בגשטלט גוף נפש, הידרותרפיה, חינוך מיוחד, מטפל במגע ובגישה הנוירו התפתחותית תפקודית. ממייסדי הבוגי הירושלמי - חלוץ הריקוד החופשי, קונטק צבע, ג'ם ים ועוד הרפתקאות. הנחתי סדנאות לאורך השנים בפסטיבלים בארץ, בחו"ל, למדתי תנועה באקדמיה בי"ם ובמכללות לרפואה אלטרנטיבית. הפקתי ורקדתי במסגרות פרילנס שונות, עם נמרוד פריד, ענת שמגר, עמוס חץ ואמיר קולבן. כיום מלמד ומטפל בקליניקה הפרטית ומצלם יופי אנושי.\n\nמוזמנים לפנות ליוצר האפליקציה במייל: ZOHARRB@gmail.com`
-      }
-    },
-    en: {
-      title: "Contact Ways",
-      subtitle: "CI Physics & Mental Skill Mapping",
-      about: "About the Tool",
-      history: "View Data",
-      data: "Data Management",
-      ai: "Expert AI Analysis",
-      save: "Save Iteration",
-      saved: "Data Saved",
-      viewMatrix: "View Data",
-      saveImage: "Save Image",
-      shareApp: "Share App",
-      shareResult: "Share Result",
-      selectAxis: "Select Feedback Axis",
-      linkCopied: "App link copied to clipboard!",
-      resultCopied: "Results copied to clipboard!",
-      optionalNote: "No need to answer everything, but each additional detail improves the analysis.",
-      experts: { 
-        general: "General Analysis", steve: "Steve Paxton (Panoramic observation)", nancy: "Nancy Stark Smith (The Underscore)", ray: "Ray Chung (Physics & Dynamics)", 
-        karen: "Karen Nelson (Somatic tuning)", daniel: "Daniel Lepkoff (Composition & Function)", martin: "Martin Keogh (Metaphors & Physicality)", nita: "Nita Little (Cellular communication)",
-        kj: "KJ Holmes (Multidimensional improvisation)", andrew: "Andrew Harwood (Technique & Performance)", julian: "Julian Hamilton (Space & Time)", angela: "Angela Doniy (Russian Listening)"
-      },
-      info: { 
-        about: `The Contact Ways system relies on the combination of Nonverbal Synchrony research and Participatory Sense-making theories.\n\nThe tool is designed to support the decoding of physical, mental, and emotional skills in Contact Improvisation. It can naturally be applied to other physical dyadic interactions.\n\nThe system has 3 levels of use:\n1. General reading of the parameters, creating conceptualization of the dance experience.\n2. Post-dance reflection.\n3. Focusing for the next dance.\n\n**Customization:** You can fully customize the guiding questions via the "Data Management" menu by downloading the file, editing it in Google Sheets, and re-uploading it.\n\n**About the Creator:**\nZohar Rabinovich - Adventurer, addicted to challenges. Today I choose them softly and politely decline the rest. Improvisation and Contact facilitator since 1994. Graduate of the Movement Department at the Rubin Academy in Jerusalem, advanced movement studies with Prof. Amos Hetz, trained in Body-Mind Gestalt, Hydrotherapy, Special Education, touch therapist, and Neuro-Developmental Functional approach. Co-founder of the Jerusalem Boogie - pioneer of free dance, Color Contact, Sea Jam, and other adventures. Facilitated workshops over the years at festivals in Israel and abroad, taught movement at the Academy in Jerusalem and alternative medicine colleges. Produced and danced in various freelance frameworks with Nimrod Fried, Anat Shamgar, Amos Hetz, and Amir Kolben. Currently teaches and treats in a private clinic and photographs human beauty.\n\nYou are welcome to contact the app creator by email: ZOHARRB@gmail.com`
-      }
-    }
-  };
-
-  const cur = t[lang];
-
-  const defaultMatrix = {
-    mechanics: {
-      title: lang === 'he' ? "מכניקה ותנועה" : "Mechanics & Movement",
-      params: [
-        { 
-          id: 'zeitgeber', 
-          label: lang === 'he' ? 'איזון הובלה' : 'Zeitgeber Balance', 
-          labels: lang === 'he' ? ['עקיבה פסיבית', 'סינכרוניות', 'הובלה נוקשה'] : ['Passive Following', 'Synchrony', 'Rigid Lead'],
-          info: {
-            desc: lang === 'he' ? "הדינמיקה בין הובלה (Leading) לעקיבה (Following)." : "The dynamics between leading and following.",
-            under: lang === 'he' ? "עקיבה פסיבית מוחלטת ללא מתן אינפורמציה חזרה לפרטנר." : "Absolute passive following with zero feedback to the partner.",
-            flow: lang === 'he' ? "חילופין נזילים וספונטניים בין הובלה למובלות עד למצב של 'סינכרוניות טהורה'." : "Fluid, spontaneous exchange between leading and following into pure synchrony.",
-            over: lang === 'he' ? "הובלה מתמדת נוקשה, ללא יכולת להקשיב לדחפי הפרטנר." : "Constant rigid leading, unable to listen to the partner's impulses."
-          }
-        },
-        { 
-          id: 'stability', 
-          label: lang === 'he' ? 'יציבות הסנכרון' : 'Sync Stability', 
-          labels: lang === 'he' ? ['סנכרון מקרי', 'סנכרון דינמי', 'סנכרון נוקשה'] : ['Accidental Sync', 'Dynamic Sync', 'Rigid Sync'],
-          info: {
-            desc: lang === 'he' ? "איכות השמירה על התיאום לאורך זמן." : "The quality of maintaining coordination over time.",
-            under: lang === 'he' ? "סנכרון מקרי, קצר וקטוע. קפיצה מתמדת בין רעיונות ללא מיצוי." : "Accidental, short, and fragmented sync. Constant jumping between ideas without exhausting them.",
-            flow: lang === 'he' ? "סנכרון יציב אך דינמי, המאפשר כניסה ויציאה מתואמת מתבניות תנועה." : "Stable yet dynamic sync, allowing coordinated entry and exit from movement patterns.",
-            over: lang === 'he' ? "סנכרון נוקשה (Rigid) שקשה לצאת ממנו או לשנות אותו; חזרתיות כפייתית." : "Rigid sync that is hard to break or change; compulsive repetitiveness."
-          }
-        },
-        { 
-          id: 'weight', 
-          label: lang === 'he' ? 'העברת משקל' : 'Weight Transfer', 
-          labels: lang === 'he' ? ['הימנעות/קלילות', 'חלוקה/תמיכה', 'קריסה/כובד'] : ['Avoidance/Light', 'Sharing/Support', 'Collapse/Heavy'],
-          info: {
-            desc: lang === 'he' ? "האופן בו אנו חולקים ונושאים משקל עם הפרטנר." : "How we share and bear weight with the partner.",
-            under: lang === 'he' ? "הימנעות ממתן משקל, החזקה עצמית מוגזמת או פחד ממשקל." : "Avoidance of giving weight, excessive self-holding, or fear of weight.",
-            flow: lang === 'he' ? "שיתוף משקל הדדי, חי ומאפשר המשך תנועה." : "Mutual weight sharing, alive and enabling continued movement.",
-            over: lang === 'he' ? "הפלת המשקל (קריסה) באופן שהפרטנר אינו יכול לשאת בבטחה." : "Dumping weight (collapse) so the partner cannot safely bear it."
-          }
-        },
-        { 
-          id: 'tonus', 
-          label: lang === 'he' ? 'ויסות טונס שרירי' : 'Tonus Regulation', 
-          labels: lang === 'he' ? ['רפיון/קריסה', 'גמיש ורספונסיבי', 'נוקשות/התנגדות'] : ['Floppy/Collapse', 'Responsive', 'Rigid/Resistance'],
-          info: {
-            desc: lang === 'he' ? "התאמת מתח השרירים לדינמיקת הריקוד." : "Adjusting muscle tone to the dance dynamics.",
-            under: lang === 'he' ? "גוף רפוי מדי שלא מעניק תמיכה (Collapse)." : "Overly floppy body providing no support (Collapse).",
-            flow: lang === 'he' ? "טונס אדפטיבי המגיב לשינויי משקל ומהירות." : "Adaptive tone responding to weight and speed changes.",
-            over: lang === 'he' ? "גוף נוקשה ומוחזק החוסם זרימה תנועתית (Bracing)." : "Rigid, held body blocking movement flow (Bracing)."
-          }
-        },
-        { 
-          id: 'space', 
-          label: lang === 'he' ? 'התמצאות במרחב' : 'Spatial Orientation', 
-          labels: lang === 'he' ? ['אובדן כיוון/סגור', 'ניווט משותף', 'השתלטות/קיבוע'] : ['Disoriented/Closed', 'Shared Nav', 'Dominating/Fixed'],
-          info: {
-            desc: lang === 'he' ? "התמצאות פיזית במרחב הריקוד ובקשר לרצפה ולפרטנר." : "Physical orientation in the dance space, relative to floor and partner.",
-            under: lang === 'he' ? "התעלמות מהמרחב, אובדן כיוון או תנועה 'סגורה' מדי." : "Ignoring space, losing direction, or overly 'closed' movement.",
-            flow: lang === 'he' ? "ניווט תלת-ממדי חופשי וסינרגטי יחד עם הפרטנר." : "Free, synergistic 3D navigation with the partner.",
-            over: lang === 'he' ? "קיבוע במרחב או השתלטות אגרסיבית על הכיוון במרחב המשותף." : "Fixation or aggressive domination of direction in the shared space."
-          }
-        },
-        { 
-          id: 'fall', 
-          label: lang === 'he' ? 'דינמיקת נפילה' : 'Falling Dynamics', 
-          labels: lang === 'he' ? ['עצירה/פחד', 'כוח מניע גמיש', 'נפילה מסוכנת'] : ['Stop/Fear', 'Flexible Momentum', 'Dangerous Fall'],
-          info: {
-            desc: lang === 'he' ? "היכולת לעבוד עם כוח הכבידה והנפילה בריקוד." : "The ability to work with gravity and falling in the dance.",
-            under: lang === 'he' ? "פחד מנפילה, בלימה עצמית ועצירת הזרימה." : "Fear of falling, self-braking, and stopping the flow.",
-            flow: lang === 'he' ? "נפילה ככוח מניע וגמיש, שימוש בנפילה להמשך תנועה." : "Falling as a flexible driving force, using it to continue movement.",
-            over: lang === 'he' ? "נפילה חסרת שליטה, קריסה פתאומית ומסוכנת." : "Uncontrolled falling, sudden and dangerous collapse."
-          }
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Ways - Mapping CI Skills</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Assistant', sans-serif; }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            background: #4f46e5;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
-      ]
-    },
-    presence: {
-      title: lang === 'he' ? "נוכחות רגשית" : "Emotional Presence",
-      params: [
-        { 
-          id: 'repair', 
-          label: lang === 'he' ? 'חוסן ותיקון' : 'Rupture & Repair', 
-          labels: lang === 'he' ? ['קפיאה/עצירה', 'התארגנות מחדש', 'תפיסה כוחנית'] : ['Freeze/Stop', 'Reorganize', 'Forced Grip'],
-          info: {
-            desc: lang === 'he' ? "היכולת להתאושש מאיבוד מגע או 'טעות' בריקוד." : "Ability to recover from loss of contact or 'mistakes'.",
-            under: lang === 'he' ? "איבוד מגע מוביל לקפיאה, מבוכה או עצירה מוחלטת של הריקוד." : "Loss of contact leads to freezing, embarrassment, or full stop.",
-            flow: lang === 'he' ? "'שבירת' התיאום נתפסת כהזדמנות ליצירת משמעות חדשה והתארגנות משותפת." : "'Breaking' coordination is seen as an opportunity for new meaning and joint reorganization.",
-            over: lang === 'he' ? "ניסיון כוחני או לחוץ 'לתפוס' מחדש את הפרטנר מבלי להקשיב למצבו." : "Forced or stressed attempt to 're-grab' the partner without listening."
-          }
-        },
-        { 
-          id: 'resonance', 
-          label: lang === 'he' ? 'תהודה רגשית' : 'Affective Resonance', 
-          labels: lang === 'he' ? ['מכני/מנותק', 'טווח הזהב', 'הצפה/הזדהות'] : ['Mechanical/Detached', 'Goldilocks Zone', 'Flooding/Merged'],
-          info: {
-            desc: lang === 'he' ? "הדהוד רגשי הדדי המאפשר אמפתיה וחיבור עמוק." : "Mutual emotional mirroring allowing empathy and deep connection.",
-            under: lang === 'he' ? "תנועה מכנית, קרה ומנותקת מהחוויה הרגשית של המפגש." : "Mechanical, cold movement detached from the emotional experience.",
-            flow: lang === 'he' ? "נוכחות ב'טווח הזהב' - חיבור רגשי גמיש המאפשר אמפתיה מבלי לאבד את המרכז העצמי." : "Presence in the 'Goldilocks Zone' - flexible emotional connection allowing empathy without losing self-center.",
-            over: lang === 'he' ? "הזדהות יתר או הצפה רגשית (Enmeshment) שפוגעת ביכולת לשמור על בטיחות פיזית." : "Over-identification or emotional flooding (Enmeshment) compromising physical safety."
-          }
-        },
-        { 
-          id: 'mindfulness', 
-          label: lang === 'he' ? 'קשיבות גופנית' : 'Somatic Mindfulness', 
-          labels: lang === 'he' ? ['חוסר מודעות', 'קשב פתוח', 'התעסקות יתר'] : ['Unaware', 'Open Monitoring', 'Over-fixation'],
-          info: {
-            desc: lang === 'he' ? "מודעות למנח הגוף, לצרכים הפיזיים ולגירויים פנימיים וחיצוניים." : "Awareness of body posture, physical needs, and internal/external stimuli.",
-            under: lang === 'he' ? "חוסר מודעות למנח הגוף או לצרכים הפיזיים ברגע נתון." : "Lack of awareness of body posture or physical needs at a given moment.",
-            flow: lang === 'he' ? "קשב פתוח (Open Monitoring) המאפשר תגובה ספונטנית לגירויים." : "Open Monitoring allowing spontaneous response to stimuli.",
-            over: lang === 'he' ? "התעסקות יתר ב'נכונות' התנועה או בטכניקה על חשבון הקשר." : "Over-fixation on the 'correctness' of movement or technique over connection."
-          }
-        },
-        { 
-          id: 'vulnerability', 
-          label: lang === 'he' ? 'פגיעות פתוחה' : 'Open Vulnerability', 
-          labels: lang === 'he' ? ['הסתרה/ניתוק', 'אותנטיות', 'חשיפת יתר'] : ['Hiding/Detached', 'Authentic', 'Over-exposed'],
-          info: {
-            desc: lang === 'he' ? "המוכנות להיראות ולהיות חשוף בקשר." : "Willingness to be seen and vulnerable in the connection.",
-            under: lang === 'he' ? "חומות הגנה, הסתרה של רגשות ומאמץ להיראות 'בסדר'." : "Defensive walls, hiding emotions, and effort to look 'okay'.",
-            flow: lang === 'he' ? "אותנטיות רגשית וכנות בתוך התנועה." : "Emotional authenticity and honesty within the movement.",
-            over: lang === 'he' ? "חשיפת יתר או דרמטיזציה של החוויה." : "Over-exposure or dramatization of the experience."
-          }
-        }
-      ]
-    },
-    timeline: {
-      title: lang === 'he' ? "זמן" : "Time",
-      params: [
-        { 
-          id: 'entry', 
-          label: lang === 'he' ? 'גישוש והזמנה' : 'Entry & Invitation', 
-          labels: lang === 'he' ? ['היסוס/הימנעות', 'הצעה עדינה', 'פלישה/כפייה'] : ['Hesitation/Avoid', 'Gentle Invite', 'Invasion/Force'],
-          info: {
-            desc: lang === 'he' ? "איכות תחילת המגע והכניסה לריקוד." : "Quality of initiating contact and entering the dance.",
-            under: lang === 'he' ? "היסוס רב, הימנעות מיצירת קשר ברור או ציפייה פסיבית." : "Extreme hesitation, avoiding clear contact, or passive expectation.",
-            flow: lang === 'he' ? "הצעת מגע עדינה וברורה המאפשרת בחירה לפרטנר." : "Gentle, clear contact proposal allowing choice for the partner.",
-            over: lang === 'he' ? "התפרצות פנימה, פלישה למרחב ללא בדיקת מוכנות." : "Bursting in, invading space without checking readiness."
-          }
-        },
-        { 
-          id: 'core', 
-          label: lang === 'he' ? 'העמקה ושיא' : 'Core Flow', 
-          labels: lang === 'he' ? ['שטחיות/הימנעות', 'נוכחות מלאה', 'אובדן שליטה'] : ['Superficial/Avoid', 'Full Presence', 'Loss of Control'],
-          info: {
-            desc: lang === 'he' ? "מרכז הריקוד והיכולת לשהות באינטנסיביות או במורכבות." : "The core of the dance and ability to stay in intensity or complexity.",
-            under: lang === 'he' ? "הישארות בחיבור שטחי ומוכר, פחד להעמיק לתוך משקל או רגש." : "Staying in a superficial, familiar connection; fear of deepening weight or emotion.",
-            flow: lang === 'he' ? "חיבור מלא, תחושת 'אנחנו נרקדים' מתוך אמון ומשקל משותף." : "Full connection, feeling 'we are danced' through trust and shared weight.",
-            over: lang === 'he' ? "הצפה חושית או רגשית המובילה לאובדן הקשבה ושליטה." : "Sensory or emotional overload leading to a loss of listening and control."
-          }
-        },
-        { 
-          id: 'exit', 
-          label: lang === 'he' ? 'פרידה ושחרור' : 'Exit & Closing', 
-          labels: lang === 'he' ? ['ניתוק פתאומי', 'סיום הדרגתי', 'היצמדות/קושי'] : ['Abrupt Cut', 'Gradual Close', 'Clinging/Hard'],
-          info: {
-            desc: lang === 'he' ? "הדרך בה הריקוד מסתיים והקשר הפיזי מתנתק." : "How the dance ends and physical contact breaks.",
-            under: lang === 'he' ? "ניתוק פתאומי, חסר הכרה או מבוהל." : "Abrupt, unacknowledged, or startled disconnection.",
-            flow: lang === 'he' ? "פרידה הדרגתית המכבדת את המפגש ומשאירה מקום לעיכול." : "Gradual closing that respects the encounter and leaves room for processing.",
-            over: lang === 'he' ? "קושי לשחרר, היצמדות מעבר לצורך או למרחב של הפרטנר." : "Difficulty letting go, clinging beyond necessity or the partner's space."
-          }
-        }
-      ]
-    }
-  };
-
-  const [matrixParams, setMatrixParams] = useState(defaultMatrix);
-
-  useEffect(() => {
-    const savedHistory = localStorage.getItem('ci_reflection_history_v7');
-    if (savedHistory) {
-      try { setHistory(JSON.parse(savedHistory)); } catch (e) { console.error(e); }
-    }
-    const savedCustomMatrix = localStorage.getItem('ci_custom_matrix_v7');
-    if (savedCustomMatrix) {
-      try { setMatrixParams(JSON.parse(savedCustomMatrix)); } catch (e) { console.error(e); }
-    } else {
-      setMatrixParams(defaultMatrix);
-    }
-  }, [lang]);
-
-  const saveIteration = () => {
-    const newEntry = { timestamp: new Date().toLocaleString(lang === 'he' ? 'he-IL' : 'en-US'), data: { ...responses } };
-    const newHistory = [newEntry, ...history];
-    setHistory(newHistory);
-    localStorage.setItem('ci_reflection_history_v7', JSON.stringify(newHistory));
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 2000);
-  };
-
-  const shareApp = async () => {
-    const url = window.location.href;
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: cur.title,
-          text: cur.subtitle,
-          url: url
-        });
-      } catch (err) {
-        console.log("Share failed", err);
-      }
-    } else {
-      navigator.clipboard.writeText(url);
-      alert(cur.linkCopied);
-    }
-  };
-
-  const RadarChart = ({ datasets, size = 300 }) => {
-    const allParams = useMemo(() => {
-      const params = [];
-      Object.values(matrixParams).forEach(cat => cat.params.forEach(p => params.push(p)));
-      return params;
-    }, [matrixParams]);
-
-    const center = size / 2;
-    const radius = size * 0.35;
-    const angleStep = (Math.PI * 2) / allParams.length;
-    const colors = ['#4f46e5', '#10b981', '#f59e0b', '#ec4899', '#06b6d4'];
-
-    const renderPolygon = (dataset, index) => {
-      const points = allParams.map((p, i) => {
-        const val = parseInt(dataset.data[p.id]) || 5;
-        const r = (val / 10) * radius;
-        const angle = i * angleStep - Math.PI / 2;
-        return { x: center + r * Math.cos(angle), y: center + r * Math.sin(angle) };
-      });
-      const path = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
-      const color = colors[index % colors.length];
-      
-      return (
-        <g key={index}>
-          <path d={path} fill={`${color}22`} stroke={color} strokeWidth="2" strokeLinejoin="round" />
-          {points.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="3" fill={color} />)}
-        </g>
-      );
-    };
-
-    const shareResult = async () => {
-       let text = `${cur.title} - ${lang === 'he' ? 'תוצאות' : 'Results'}\n\n`;
-       datasets.forEach(d => {
-         text += `--- ${d.label} ---\n`;
-         Object.values(matrixParams).forEach(cat => {
-           cat.params.forEach(p => {
-             text += `${p.label}: ${d.data[p.id] || 5}/10\n`;
-           });
-         });
-         text += '\n';
-       });
-
-       if (navigator.share) {
-         try {
-           await navigator.share({
-             title: `${cur.title} Results`,
-             text: text,
-           });
-         } catch (err) {
-           console.log("Share failed", err);
-         }
-       } else {
-         navigator.clipboard.writeText(text);
-         alert(cur.resultCopied);
-       }
-    };
-
-    const saveRadarImageLocal = () => {
-      const svgElement = document.getElementById("radar-chart-svg");
-      if (!svgElement) return;
-      
-      const serializer = new XMLSerializer();
-      let source = serializer.serializeToString(svgElement);
-      
-      if(!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)){
-          source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
-      }
-      
-      const svgBlob = new Blob([source], {type: "image/svg+xml;charset=utf-8"});
-      const url = URL.createObjectURL(svgBlob);
-      
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        canvas.width = svgElement.baseVal?.width?.value || 440;
-        canvas.height = svgElement.baseVal?.height?.value || 440;
-        
-        const ctx = canvas.getContext("2d");
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0);
-        
-        const imgURL = canvas.toDataURL("image/png");
-        const a = document.createElement("a");
-        a.download = `ContactWays_Radar_${new Date().toISOString().slice(0,10)}.png`;
-        a.href = imgURL;
-        a.click();
-        URL.revokeObjectURL(url);
-      };
-      img.src = url;
-    };
-
-    return (
-      <div className="flex flex-col items-center justify-center p-6 bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden relative">
-        <div className="flex justify-between items-center w-full mb-4">
-           <h3 className="text-xl font-black text-slate-900">{lang === 'he' ? 'מפת איכויות הריקוד' : 'Dance Quality Map'}</h3>
-           <div className="flex gap-2">
-             <button onClick={shareResult} className="p-2 bg-indigo-50 hover:bg-indigo-100 rounded-xl text-indigo-600 transition-colors flex items-center gap-2" title={cur.shareResult}>
-               <Share2 className="w-4 h-4" />
-               <span className="text-xs font-bold hidden sm:inline">{cur.shareResult}</span>
-             </button>
-             <button onClick={saveRadarImageLocal} className="p-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-600 transition-colors flex items-center gap-2" title={cur.saveImage}>
-               <Camera className="w-4 h-4" />
-               <span className="text-xs font-bold hidden sm:inline">{cur.saveImage}</span>
-             </button>
-           </div>
-        </div>
-        
-        {datasets.length > 1 && (
-          <div className="flex flex-wrap gap-2 mb-4 justify-center">
-            {datasets.map((d, i) => (
-              <div key={i} className="flex items-center gap-1 text-[10px] font-bold" style={{color: colors[i % colors.length]}}>
-                <div className="w-2 h-2 rounded-full" style={{backgroundColor: colors[i % colors.length]}}></div>
-                {d.label}
-              </div>
-            ))}
-          </div>
-        )}
-
-        <svg id="radar-chart-svg" width={size + 140} height={size + 140} viewBox={`-70 -70 ${size + 140} ${size + 140}`} className="max-w-full" xmlns="http://www.w3.org/2000/svg">
-          {[2, 4, 6, 8, 10].map(v => (
-            <circle key={v} cx={center} cy={center} r={(v/10) * radius} fill="none" stroke="#f1f5f9" strokeWidth="1" />
-          ))}
-          {allParams.map((p, i) => (
-            <line key={i} x1={center} y1={center} x2={center + radius * Math.cos(i * angleStep - Math.PI / 2)} y2={center + radius * Math.sin(i * angleStep - Math.PI / 2)} stroke="#f1f5f9" />
-          ))}
-          
-          {datasets.map((dataset, idx) => renderPolygon(dataset, idx))}
-
-          {allParams.map((p, i) => {
-              const angle = i * angleStep - Math.PI / 2;
-              const labelX = center + (radius + 25) * Math.cos(angle);
-              const labelY = center + (radius + 25) * Math.sin(angle);
-              const textAnchor = labelX > center ? "start" : "end";
-              return (
-                <text key={i} x={labelX} y={labelY} fontSize="10" fontWeight="700" textAnchor={textAnchor} dominantBaseline="middle" fill="#64748b" style={{fontFamily: 'Assistant, sans-serif'}}>
-                  {p.label}
-                </text>
-              );
-          })}
-        </svg>
-      </div>
-    );
-  };
-
-  const showInfo = (param) => setHelpContent(param);
-
-  const getStatusColor = (v) => {
-    if (!v) return 'bg-slate-200';
-    const val = parseInt(v);
-    if (val >= 4 && val <= 7) return 'bg-indigo-500';
-    if (val < 4) return 'bg-amber-400';
-    return 'bg-rose-400';
-  };
-
-  const getRadarDatasets = () => {
-    if (historyViewMode === 'single') {
-      const currentData = viewedIterationIndex === history.length ? responses : history[viewedIterationIndex].data;
-      const label = viewedIterationIndex === history.length ? 'LIVE' : history[viewedIterationIndex].timestamp;
-      return [{ data: currentData, label }];
-    } else if (historyViewMode === 'overlay') {
-      return history.slice(0, 4).map((h, i) => ({ data: h.data, label: h.timestamp }));
-    }
-    return [];
-  };
-
-  const downloadQuestionnaireCSVLocal = () => {
-    let csv = '\uFEFFCategory,ID,Label,Desc,Under,Flow,Over,Label_Under,Label_Flow,Label_Over\n';
-    Object.entries(matrixParams).forEach(([catKey, catVal]) => {
-      catVal.params.forEach(p => {
-        const escape = (str) => `"${(str || '').replace(/"/g, '""')}"`;
-        csv += `${escape(catKey)},${escape(p.id)},${escape(p.label)},${escape(p.info?.desc)},${escape(p.info?.under)},${escape(p.info?.flow)},${escape(p.info?.over)},${escape(p.labels?.[0])},${escape(p.labels?.[1])},${escape(p.labels?.[2])}\n`;
-      });
-    });
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a"); link.href = url; link.download = "questionnaire_template.csv";
-    document.body.appendChild(link); link.click(); document.body.removeChild(link);
-  };
-
-  const handleQuestionnaireUploadLocal = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const text = event.target.result;
-      const rows = text.split('\n').map(row => {
-        const matches = row.match(/(\s*"[^"]+"\s*|\s*[^,]+|,)(?=,|$)/g);
-        return matches ? matches.map(m => m.replace(/^,/, '').replace(/^"|"$/g, '').trim()) : [];
-      });
-
-      const newMatrix = {
-        mechanics: { title: lang === 'he' ? "מכניקה ותנועה" : "Mechanics & Movement", params: [] },
-        presence: { title: lang === 'he' ? "נוכחות רגשית" : "Emotional Presence", params: [] },
-        timeline: { title: lang === 'he' ? "זמן" : "Time", params: [] }
-      };
-      
-      for(let i=1; i<rows.length; i++) {
-        if(rows[i].length >= 4) {
-          const [cat, id, label, desc, under, flow, over, lUnder, lFlow, lOver] = rows[i];
-          if(cat && newMatrix[cat]) {
-            newMatrix[cat].params.push({ 
-              id, label, 
-              labels: [lUnder || 'Under', lFlow || 'Flow', lOver || 'Over'],
-              info: { desc, under, flow, over } 
-            });
-          }
-        }
-      }
-      setMatrixParams(newMatrix);
-      localStorage.setItem('ci_custom_matrix_v7', JSON.stringify(newMatrix));
-      setShowDataMenu(false);
-      alert(lang === 'he' ? 'השאלון עודכן בהצלחה!' : 'Questionnaire updated successfully!');
-    };
-    reader.readAsText(file);
-    e.target.value = '';
-  };
-
-  const exportHistoryJSONLocal = () => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(history, null, 2));
-    const link = document.createElement("a"); link.href = dataStr; link.download = "contact_ways_history.json";
-    document.body.appendChild(link); link.click(); document.body.removeChild(link);
-  };
-
-  const handleHistoryUploadLocal = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const imported = JSON.parse(event.target.result);
-        if (Array.isArray(imported)) {
-          const combined = [...imported, ...history];
-          setHistory(combined);
-          localStorage.setItem('ci_reflection_history_v7', JSON.stringify(combined));
-          setShowDataMenu(false);
-          alert(lang === 'he' ? 'הנתונים האישיים יובאו בהצלחה (התווספו לקיים).' : 'Data imported successfully.');
-        }
-      } catch (err) {
-        alert(lang === 'he' ? 'שגיאה: קובץ לא תקין' : 'Error: Invalid file format');
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
-  };
-
-  return (
-    <div className={`min-h-screen bg-[#f8fafc] text-slate-900 font-['Assistant',_sans-serif] ${lang === 'he' ? 'rtl' : 'ltr'}`} dir={lang === 'he' ? 'rtl' : 'ltr'}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;800&display=swap');
         .no-scrollbar::-webkit-scrollbar { display: none; }
-      `}</style>
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-[#f8fafc] text-slate-900 min-h-screen">
 
-      {/* Header */}
-      <header className="bg-white border-b border-slate-200 px-6 py-6 sticky top-0 z-40">
-        <div className="max-w-2xl mx-auto">
-          <div className="relative flex flex-col items-center justify-center mb-6">
-            <div className={`absolute top-0 ${lang === 'he' ? 'left-0' : 'right-0'} flex gap-2`}>
-               <button onClick={shareApp} className="p-2 bg-slate-100 rounded-lg text-slate-600 hover:bg-slate-200 transition-colors" title={cur.shareApp}>
-                 <Share2 className="w-4 h-4" />
-               </button>
-               <button onClick={() => setLang(lang === 'he' ? 'en' : 'he')} className="px-3 py-1.5 bg-slate-100 rounded-lg text-xs font-bold hover:bg-slate-200 uppercase transition-colors">
-                 {lang === 'he' ? 'English' : 'עברית'}
-               </button>
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 px-6 py-6 sticky top-0 z-40">
+        <div class="max-w-2xl mx-auto">
+            <div class="relative flex flex-col items-center justify-center mb-6">
+                <h1 class="text-3xl font-bold text-slate-900 tracking-tight">Contact Ways</h1>
+                <p id="subtitle" class="text-xs text-indigo-600 font-bold uppercase tracking-widest mt-1 text-center">מיפוי מיומנויות פיזיות ומנטליות בקונטאקט</p>
             </div>
-            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Contact Ways</h1>
-            <p className="text-xs text-indigo-600 font-bold uppercase tracking-widest mt-1 text-center">{cur.subtitle}</p>
-          </div>
-          
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 justify-center">
-            <button onClick={() => setHelpContent({label: cur.about, info: {desc: cur.info.about}})} className="flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-xl text-base font-bold border border-indigo-100">
-              <BookOpen className="w-5 h-5" /> {cur.about}
-            </button>
-            <button onClick={() => setShowMatrixView(true)} className="flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-base font-bold shadow-lg">
-              <LayoutGrid className="w-5 h-5" /> {cur.viewMatrix}
-            </button>
-            <button onClick={() => setShowDataMenu(true)} className="flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-white text-slate-700 rounded-xl text-base font-bold border border-slate-200 shadow-sm">
-              <Layers className="w-5 h-5" /> {cur.data}
-            </button>
-          </div>
+            
+            <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1 justify-center">
+                <button onclick="toggleAbout()" class="flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-xl text-base font-bold border border-indigo-100">
+                    <i data-lucide="book-open" class="w-5 h-5"></i> אודות הכלי
+                </button>
+                <button onclick="alert('פונקציית הגרף תופעל בגרסה המלאה')" class="flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-base font-bold shadow-lg">
+                    <i data-lucide="layout-grid" class="w-5 h-5"></i> הצגת נתונים
+                </button>
+            </div>
         </div>
-      </header>
+    </header>
 
-      <main className="max-w-2xl mx-auto p-6 pb-48">
+    <main class="max-w-2xl mx-auto p-6 pb-48">
         
-        {/* Navigation Prompt and Tabs */}
-        <div className="mb-8">
-           <p className="text-center text-sm font-black text-indigo-500 uppercase tracking-widest mb-3">
-             {cur.selectAxis}
-           </p>
-           <div className="flex bg-slate-200/50 rounded-2xl p-1">
-             {Object.keys(matrixParams).map((key) => (
-               <button key={key} onClick={() => setActiveTab(key)} className={`flex-1 py-4 text-base font-black rounded-xl transition-all ${activeTab === key ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-                 {matrixParams[key].title}
-               </button>
-             ))}
-           </div>
-        </div>
-
-        <div className="grid gap-6">
-          <p className={`text-sm font-bold text-slate-400 mb-2 px-2 italic text-center`}>
-            {cur.optionalNote}
-          </p>
-          {matrixParams[activeTab].params.map((param) => (
-            <div key={param.id} className="bg-white rounded-[1.5rem] p-6 shadow-sm border border-slate-100 group">
-              <div className="flex justify-between items-center mb-6">
-                <div className={`flex items-center gap-2 ${lang === 'he' ? 'text-start' : 'text-start'}`}>
-                  <h3 className="font-bold text-slate-800 text-2xl">{param.label}</h3>
-                  <button onClick={() => showInfo(param)} className="text-slate-300 hover:text-indigo-500">
-                    <Info className="w-6 h-6" />
-                  </button>
-                </div>
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white text-lg font-black transition-colors ${getStatusColor(responses[param.id])}`}>
-                  {responses[param.id] || '-'}
-                </div>
-              </div>
-
-              {/* Slider Container */}
-              <div className="relative mb-8 px-1">
-                <input 
-                  type="range" 
-                  min="1" 
-                  max="10" 
-                  step="1" 
-                  value={responses[param.id] || 5} 
-                  onChange={(e) => setResponses(prev => ({...prev, [param.id]: e.target.value}))} 
-                  className="w-full h-3 bg-slate-100 rounded-full appearance-none cursor-pointer accent-indigo-600" 
-                />
-                
-                {/* Dynamic Labels under the slider */}
-                <div className="flex justify-between mt-4 text-sm font-bold text-slate-400 uppercase tracking-tight">
-                  <span className="w-1/3 text-start">{param.labels[0]}</span>
-                  <span className="w-1/3 text-center text-indigo-500 font-black">{param.labels[1]}</span>
-                  <span className="w-1/3 text-end">{param.labels[2]}</span>
-                </div>
-              </div>
+        <!-- Navigation Prompt -->
+        <div class="mb-8 text-center">
+            <p class="text-sm font-black text-indigo-500 uppercase tracking-widest mb-3">בחר ציר משוב</p>
+            <div class="flex bg-slate-200/50 rounded-2xl p-1" id="tabs-container">
+                <!-- Tabs will be rendered here -->
             </div>
-          ))}
         </div>
 
-        {/* AI SECTION */}
-        <div className={`mt-12 bg-indigo-600 rounded-[2rem] p-8 text-white shadow-xl relative overflow-hidden ${lang === 'he' ? 'text-start' : 'text-start'}`}>
-          <div className="flex items-center gap-4 mb-6"><Zap className="w-6 h-6 text-white" /><h3 className="text-2xl font-black">{cur.ai}</h3></div>
-          <select value={selectedExpert} onChange={(e) => setSelectedExpert(e.target.value)} className={`w-full bg-white/10 border border-white/20 rounded-xl py-3 px-4 text-base font-bold text-white outline-none mb-4 ${lang === 'he' ? 'text-start' : 'text-start'}`}>
-            {Object.entries(cur.experts).map(([key, val]) => (<option key={key} value={key} className="text-slate-900">{val}</option>))}
-          </select>
-          
-          <div className="bg-white/5 rounded-2xl p-4 border border-white/10 mb-4">
-            <label className="text-sm font-bold text-indigo-100 flex items-center gap-1.5 mb-2 px-1">
-              <MessageSquarePlus className="w-5 h-5" />
-              {lang === 'he' ? 'שאלה או בקשה אישית ליועץ ה-AI (אופציונלי):' : 'Custom question for AI (Optional):'}
-            </label>
-            <textarea
-              value={customAIRequest}
-              onChange={(e) => setCustomAIRequest(e.target.value)}
-              placeholder={lang === 'he' ? 'לדוגמה: "הרגשתי כבד מדי היום, איך לשפר נשיאת משקל?"' : 'e.g., "I felt very heavy today..."'}
-              className={`w-full bg-indigo-950/50 border border-indigo-900/50 rounded-xl p-4 text-base font-medium text-white placeholder-indigo-300 outline-none focus:border-indigo-400 resize-none h-24 ${lang === 'he' ? 'text-start' : 'text-start'}`}
-            />
-          </div>
-
-          <button onClick={() => {
-            const expertName = cur.experts[selectedExpert];
-            const customText = customAIRequest ? `\n\nשאלה אישית מהרוקד:\n${customAIRequest}` : "";
-            const langInstr = lang === 'he' ? 'ענה בעברית.' : 'Answer in English.';
-            const prompt = `נתח את תהליך הסנכרון התנועתי שלי ברוח הלימוד של ${expertName}. 
-הנתונים מבוססים על ${history.length} איטרציות. 
-ההיסטוריה: ${JSON.stringify(history, null, 2)}${customText}
-התייחס בבקשה לרמות ה-Under וה-Over שמופיעות בנתונים והצע דרכי עבודה לשיפור ה-Flow. ${langInstr}`;
-            
-            navigator.clipboard.writeText(prompt).then(() => {
-              setShowAiModal(true);
-            }).catch(() => {
-              alert(lang === 'he' ? "שגיאה בהעתקת הפרומפט." : "Error copying prompt.");
-            });
-          }} className="w-full py-4 bg-white text-indigo-600 rounded-xl font-black text-base hover:bg-indigo-50 transition-colors">{lang === 'he' ? 'בצע ניתוח מומחה' : 'Run Analysis'}</button>
+        <div id="questions-container" class="grid gap-6">
+            <p class="text-sm font-bold text-slate-400 mb-2 px-2 italic text-center">
+                אין חובה לענות על הכל, אך כל נתון נוסף מדייק את הניתוח.
+            </p>
+            <!-- Questions will be rendered here -->
         </div>
-      </main>
 
-      {/* Primary Action Button */}
-      <div className="fixed bottom-8 left-6 right-6 max-w-2xl mx-auto z-30">
-        <button onClick={saveIteration} className={`w-full py-5 rounded-2xl font-black text-xl shadow-2xl flex items-center justify-center gap-4 transition-all ${isSaved ? 'bg-emerald-500 text-white' : 'bg-slate-900 text-white hover:scale-[1.02]'}`}>
-          {isSaved ? <CheckCircle2 className="w-7 h-7" /> : <Save className="w-7 h-7" />}
-          {isSaved ? cur.saved : cur.save}
+    </main>
+
+    <!-- Save Button -->
+    <div class="fixed bottom-8 left-6 right-6 max-w-2xl mx-auto z-30">
+        <button onclick="saveData()" id="save-btn" class="w-full py-5 bg-slate-900 text-white rounded-2xl font-black text-xl shadow-2xl flex items-center justify-center gap-4 transition-all hover:scale-[1.02]">
+            <i data-lucide="save" class="w-7 h-7"></i> שמירת איטרציה
         </button>
-      </div>
-
-      {/* --- Matrix / History View Modal --- */}
-      {showMatrixView && (
-        <div className={`fixed inset-0 z-[60] bg-white overflow-y-auto ${lang === 'he' ? 'text-start' : 'text-start'}`}>
-          <div className="max-w-4xl mx-auto p-6">
-            <div className="flex justify-between items-center mb-6 sticky top-0 bg-white py-2 z-10 border-b border-slate-100">
-              <h2 className="text-3xl font-black text-slate-900">{cur.history}</h2>
-              <button onClick={() => setShowMatrixView(false)} className="p-3 bg-slate-100 rounded-full hover:bg-slate-200 transition-colors"><X className="w-6 h-6"/></button>
-            </div>
-            
-            <div className="space-y-6 pb-24">
-              <div className="flex bg-slate-100 p-1 rounded-xl">
-                <button onClick={() => setHistoryViewMode('single')} className={`flex-1 py-3 text-base font-bold rounded-lg ${historyViewMode === 'single' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500'}`}>
-                  {lang === 'he' ? 'תצוגה בודדת' : 'Single'}
-                </button>
-                <button onClick={() => setHistoryViewMode('overlay')} className={`flex-1 py-3 text-base font-bold rounded-lg ${historyViewMode === 'overlay' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500'}`}>
-                  {lang === 'he' ? 'תצוגת Overlay' : 'Overlay'}
-                </button>
-                <button onClick={() => setHistoryViewMode('table')} className={`flex-1 py-3 text-base font-bold rounded-lg ${historyViewMode === 'table' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500'}`}>
-                  {lang === 'he' ? 'טבלת נתונים' : 'Table'}
-                </button>
-              </div>
-
-              {historyViewMode === 'single' && (
-                <div className="bg-slate-50 p-4 rounded-3xl border border-slate-100">
-                  <div className="flex items-center justify-between gap-4 mb-4">
-                    <button disabled={viewedIterationIndex === history.length} onClick={() => setViewedIterationIndex(history.length)} className={`flex-1 py-3 rounded-xl text-sm font-black transition-all ${viewedIterationIndex === history.length ? 'bg-indigo-600 text-white' : 'bg-white border border-slate-200 text-slate-600'}`}>
-                      {lang === 'he' ? 'נתונים נוכחיים' : 'Current Data'}
-                    </button>
-                    {history.length > 0 && (
-                      <div className="flex items-center gap-2 bg-white border border-slate-200 p-1 rounded-xl">
-                        <button disabled={viewedIterationIndex === 0} onClick={() => setViewedIterationIndex(v => Math.max(0, v - 1))} className="p-2 hover:bg-slate-100 rounded-lg disabled:opacity-20">
-                          {lang === 'he' ? <ChevronRight className="w-5 h-5"/> : <ChevronLeft className="w-5 h-5"/>}
-                        </button>
-                        <span className="text-sm font-bold px-3 whitespace-nowrap">{viewedIterationIndex < history.length ? history[viewedIterationIndex].timestamp : 'LIVE'}</span>
-                        <button disabled={viewedIterationIndex >= history.length - 1 && viewedIterationIndex !== history.length} onClick={() => setViewedIterationIndex(v => v + 1)} className="p-2 hover:bg-slate-100 rounded-lg disabled:opacity-20">
-                          {lang === 'he' ? <ChevronLeft className="w-5 h-5"/> : <ChevronRight className="w-5 h-5"/>}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                  <div className="transform scale-105 my-4">
-                    <RadarChart datasets={getRadarDatasets()} />
-                  </div>
-                </div>
-              )}
-
-              {historyViewMode === 'overlay' && (
-                <div className="bg-slate-50 p-4 rounded-3xl border border-slate-100">
-                   <p className="text-base font-bold text-slate-500 mb-4 text-center">
-                     {lang === 'he' ? 'הצגת 4 הגרסאות האחרונות יחד להשוואה' : 'Overlay of last 4 versions'}
-                   </p>
-                   {history.length > 0 ? (
-                     <div className="transform scale-105 my-4">
-                       <RadarChart datasets={getRadarDatasets()} />
-                     </div>
-                   ) : (
-                     <div className="text-center py-10 text-slate-400 font-bold text-xl">{lang === 'he' ? 'אין מספיק נתונים' : 'Not enough data'}</div>
-                   )}
-                </div>
-              )}
-
-              {historyViewMode === 'table' && (
-                <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden">
-                   <div className="overflow-x-auto custom-scroll">
-                     <table className={`w-full text-base ${lang === 'he' ? 'text-start' : 'text-start'}`}>
-                       <thead className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
-                         <tr>
-                           <th className={`p-4 sticky ${lang === 'he' ? 'right-0 border-l' : 'left-0 border-r'} bg-slate-50 border-slate-200 z-10 min-w-[150px]`}>{lang === 'he' ? 'פרמטר' : 'Parameter'}</th>
-                           {history.map((h, i) => (
-                             <th key={i} className={`p-4 whitespace-nowrap ${lang === 'he' ? 'border-l' : 'border-r'} border-slate-100 font-black text-sm text-indigo-800 text-center`}>
-                               {h.timestamp}
-                             </th>
-                           ))}
-                         </tr>
-                       </thead>
-                       <tbody>
-                         {Object.values(matrixParams).flatMap(cat => cat.params).map((p, idx) => (
-                           <tr key={p.id} className="border-b border-slate-100 hover:bg-slate-50/50">
-                             <td className={`p-4 sticky ${lang === 'he' ? 'right-0 border-l' : 'left-0 border-r'} bg-white border-slate-200 z-10 font-bold text-slate-800`}>
-                               {p.label}
-                             </td>
-                             {history.map((h, i) => {
-                               const val = h.data[p.id] || '-';
-                               return (
-                                 <td key={i} className={`p-4 text-center ${lang === 'he' ? 'border-l' : 'border-r'} border-slate-100 font-black text-lg`} style={{color: getStatusColor(val).replace('bg-','text-')}}>
-                                   {val}
-                                 </td>
-                               );
-                             })}
-                           </tr>
-                         ))}
-                       </tbody>
-                     </table>
-                   </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* HELP POPUP */}
-      {helpContent && (
-        <div className="fixed inset-0 z-[120] bg-slate-950/40 p-6 flex items-center justify-center backdrop-blur-sm" onClick={() => setHelpContent(null)}>
-          <div className={`bg-white rounded-[2rem] p-0 w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 ${lang === 'he' ? 'text-start' : 'text-start'}`} onClick={e => e.stopPropagation()}>
-            <div className="p-7 flex justify-between items-start bg-slate-50 border-b border-slate-100">
-               <h3 className="font-black text-3xl text-slate-900">{helpContent.label}</h3>
-               <button onClick={() => setHelpContent(null)} className="p-2 bg-white rounded-full text-slate-400 hover:text-slate-600 transition-colors shadow-sm">
-                 <X className="w-6 h-6" />
-               </button>
-            </div>
-
-            <div className="p-9 space-y-7 max-h-[60vh] overflow-y-auto no-scrollbar">
-              <p className={`text-slate-600 font-medium leading-relaxed text-xl whitespace-pre-wrap ${lang === 'he' ? 'text-start' : 'text-start'}`}>
-                {helpContent.info.desc}
-              </p>
-
-              {helpContent.info.under && (
-                <div className={`space-y-5 pt-5 border-t border-slate-100 ${lang === 'he' ? 'text-start' : 'text-start'}`}>
-                  <div className="text-lg leading-relaxed bg-amber-50 p-5 rounded-2xl border border-amber-100">
-                    <span className="font-black text-amber-800 block mb-1">{lang === 'he' ? 'חסר (Under):' : 'Under:'}</span>
-                    <span className="text-amber-900/80 font-medium">{helpContent.info.under}</span>
-                  </div>
-                  
-                  <div className="text-lg leading-relaxed bg-indigo-50 p-5 rounded-2xl border border-indigo-100">
-                    <span className="font-black text-indigo-800 block mb-1">{lang === 'he' ? 'מאוזן (Flow):' : 'Flow:'}</span>
-                    <span className="text-indigo-900/80 font-medium">{helpContent.info.flow}</span>
-                  </div>
-
-                  <div className="text-lg leading-relaxed bg-rose-50 p-5 rounded-2xl border border-rose-100">
-                    <span className="font-black text-rose-800 block mb-1">{lang === 'he' ? 'עודף (Over):' : 'Over:'}</span>
-                    <span className="text-rose-900/80 font-medium">{helpContent.info.over}</span>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="p-6 bg-slate-50 flex justify-end border-t border-slate-100">
-              <button onClick={() => setHelpContent(null)} className="px-10 py-3.5 bg-slate-900 text-white rounded-xl font-black text-base uppercase tracking-wider hover:bg-slate-800 transition-all shadow-md active:scale-95">
-                {lang === 'he' ? 'סגור' : 'Close'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Choose AI Modal */}
-      {showAiModal && (
-        <div className={`fixed inset-0 z-[130] bg-slate-900/95 backdrop-blur-md p-6 flex items-center justify-center ${lang === 'he' ? 'text-start' : 'text-start'}`} onClick={() => setShowAiModal(false)}>
-           <div className="bg-white rounded-[3rem] p-10 w-full max-w-sm shadow-2xl text-center animate-in slide-in-from-bottom" onClick={e => e.stopPropagation()}>
-              <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                 <CheckCircle2 className="w-8 h-8" />
-              </div>
-              <h2 className="text-2xl font-black text-slate-900 mb-2">{lang === 'he' ? 'הפרומפט הועתק!' : 'Prompt Copied!'}</h2>
-              <p className="text-base text-slate-500 font-medium mb-8">
-                {lang === 'he' ? 'בחרו באיזו אפליקציה/אתר AI לפתוח כדי להדביק את הבקשה:' : 'Choose your preferred AI to paste the prompt:'}
-              </p>
-              <div className="space-y-3">
-                 <a href="https://chatgpt.com" target="_blank" rel="noopener noreferrer" className="w-full py-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between px-6 hover:bg-slate-100 font-bold text-slate-700">
-                    ChatGPT <ExternalLink className="w-5 h-5 text-slate-400" />
-                 </a>
-                 <a href="https://gemini.google.com" target="_blank" rel="noopener noreferrer" className="w-full py-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between px-6 hover:bg-slate-100 font-bold text-slate-700">
-                    Google Gemini <ExternalLink className="w-5 h-5 text-slate-400" />
-                 </a>
-                 <a href="https://claude.ai" target="_blank" rel="noopener noreferrer" className="w-full py-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between px-6 hover:bg-slate-100 font-bold text-slate-700">
-                    Claude AI <ExternalLink className="w-5 h-5 text-slate-400" />
-                 </a>
-              </div>
-              <button onClick={() => setShowAiModal(false)} className="mt-8 text-base font-bold text-slate-400 hover:text-slate-600 underline">
-                 {lang === 'he' ? 'סגור' : 'Close'}
-              </button>
-           </div>
-        </div>
-      )}
-
-      {/* Data Management Menu */}
-      {showDataMenu && (
-        <div className={`fixed inset-0 z-[100] bg-slate-950/80 flex items-center justify-center p-6 ${lang === 'he' ? 'text-start' : 'text-start'}`} onClick={() => setShowDataMenu(false)}>
-          <div className="bg-white rounded-[2rem] w-full max-w-sm p-8 text-center animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
-            <h2 className="text-2xl font-black mb-6 flex items-center justify-center gap-2">
-              <Layers className="w-6 h-6 text-indigo-600" /> {cur.data}
-            </h2>
-            
-            <div className="space-y-6">
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                <h3 className="font-bold text-base text-slate-400 mb-3 uppercase tracking-wider">{lang === 'he' ? 'נתונים אישיים (היסטוריה)' : 'Personal History'}</h3>
-                <div className="space-y-2">
-                  <button onClick={exportHistoryJSONLocal} className="w-full p-4 bg-white border border-slate-200 rounded-xl font-bold text-sm flex items-center justify-between hover:border-indigo-300">
-                    <span>{lang === 'he' ? 'ייצוא נתונים אישיים' : 'Export History (JSON)'}</span>
-                    <Download className="w-5 h-5 text-indigo-500" />
-                  </button>
-                  <button onClick={() => dataInputRef.current.click()} className="w-full p-4 bg-white border border-slate-200 rounded-xl font-bold text-sm flex items-center justify-between hover:border-indigo-300">
-                    <span>{lang === 'he' ? 'ייבוא נתונים אישיים' : 'Import History (JSON)'}</span>
-                    <Upload className="w-5 h-5 text-indigo-500" />
-                  </button>
-                  <input type="file" ref={dataInputRef} onChange={handleHistoryUploadLocal} accept=".json" className="hidden" />
-                </div>
-              </div>
-
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                <h3 className="font-bold text-base text-slate-400 mb-3 uppercase tracking-wider">{lang === 'he' ? 'תבנית שאלון' : 'Questionnaire'}</h3>
-                <div className="space-y-2">
-                  <button onClick={downloadQuestionnaireCSVLocal} className="w-full p-4 bg-white border border-slate-200 rounded-xl font-bold text-sm flex items-center justify-between hover:border-emerald-300">
-                    <span>{lang === 'he' ? 'ייצוא שאלון לגוגל שיטס' : 'Export Template (CSV)'}</span>
-                    <FileSpreadsheet className="w-5 h-5 text-emerald-500" />
-                  </button>
-                  <button onClick={() => fileInputRef.current.click()} className="w-full p-4 bg-white border border-slate-200 rounded-xl font-bold text-sm flex items-center justify-between hover:border-emerald-300">
-                    <span>{lang === 'he' ? 'ייבוא שאלון מותאם' : 'Import Template (CSV)'}</span>
-                    <Upload className="w-5 h-5 text-emerald-500" />
-                  </button>
-                  <input type="file" ref={fileInputRef} onChange={handleQuestionnaireUploadLocal} accept=".csv" className="hidden" />
-                </div>
-              </div>
-            </div>
-
-            <button onClick={() => setShowDataMenu(false)} className="w-full mt-6 py-4 bg-slate-900 text-white rounded-xl font-black text-base uppercase tracking-wider hover:bg-slate-800 transition-all active:scale-95">
-              {lang === 'he' ? 'חזור' : 'Back'}
-            </button>
-          </div>
-        </div>
-      )}
     </div>
-  );
-};
 
-export default App;
+    <!-- Modal Logic Overlay -->
+    <div id="modal-overlay" class="fixed inset-0 z-[100] bg-slate-950/40 hidden backdrop-blur-sm flex items-center justify-center p-6">
+        <div class="bg-white rounded-[2rem] max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col shadow-2xl">
+            <div class="p-6 border-b flex justify-between items-center bg-slate-50">
+                <h3 id="modal-title" class="text-2xl font-black"></h3>
+                <button onclick="closeModal()" class="p-2 hover:bg-slate-200 rounded-full"><i data-lucide="x"></i></button>
+            </div>
+            <div id="modal-content" class="p-8 overflow-y-auto text-lg leading-relaxed text-slate-600"></div>
+        </div>
+    </div>
+
+    <script>
+        // Data Structure
+        const matrixData = {
+            mechanics: {
+                title: "מכניקה",
+                params: [
+                    { id: 'zeitgeber', label: 'איזון הובלה', labels: ['עקיבה פסיבית', 'סינכרוניות', 'הובלה נוקשה'], desc: "הדינמיקה בין הובלה לעקיבה." },
+                    { id: 'weight', label: 'העברת משקל', labels: ['קלילות', 'חלוקה', 'קריסה'], desc: "האופן בו אנו חולקים ונושאים משקל." },
+                    { id: 'tonus', label: 'ויסות טונס', labels: ['רפיון', 'גמיש', 'נוקשות'], desc: "התאמת מתח השרירים לדינמיקה." }
+                ]
+            },
+            presence: {
+                title: "נוכחות",
+                params: [
+                    { id: 'resonance', label: 'תהודה רגשית', labels: ['מכני', 'טווח הזהב', 'הצפה'], desc: "הדהוד רגשי הדדי המאפשר אמפתיה." },
+                    { id: 'vulnerability', label: 'פגיעות', labels: ['הסתרה', 'אותנטיות', 'חשיפת יתר'], desc: "המוכנות להיראות ולהיות חשוף בקשר." }
+                ]
+            },
+            time: {
+                title: "זמן",
+                params: [
+                    { id: 'entry', label: 'גישוש', labels: ['היסוס', 'הזמנה', 'פלישה'], desc: "איכות תחילת המגע והכניסה לריקוד." },
+                    { id: 'exit', label: 'פרידה', labels: ['ניתוק', 'הדרגתיות', 'היצמדות'], desc: "הדרך בה הריקוד מסתיים." }
+                ]
+            }
+        };
+
+        let activeTab = 'mechanics';
+        let responses = {};
+
+        function renderTabs() {
+            const container = document.getElementById('tabs-container');
+            container.innerHTML = Object.keys(matrixData).map(key => `
+                <button onclick="setActiveTab('${key}')" class="flex-1 py-4 text-base font-black rounded-xl transition-all ${activeTab === key ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}">
+                    ${matrixData[key].title}
+                </button>
+            `).join('');
+        }
+
+        function renderQuestions() {
+            const container = document.getElementById('questions-container');
+            const note = `<p class="text-sm font-bold text-slate-400 mb-2 px-2 italic text-center">אין חובה לענות על הכל, אך כל נתון נוסף מדייק את הניתוח.</p>`;
+            
+            const questions = matrixData[activeTab].params.map(p => `
+                <div class="bg-white rounded-[1.5rem] p-6 shadow-sm border border-slate-100">
+                    <div class="flex justify-between items-center mb-6">
+                        <div class="flex items-center gap-2">
+                            <h3 class="font-bold text-slate-800 text-2xl">${p.label}</h3>
+                            <button onclick="showInfo('${p.label}', '${p.desc}')" class="text-slate-300 hover:text-indigo-500">
+                                <i data-lucide="info" class="w-6 h-6"></i>
+                            </button>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-indigo-500 flex items-center justify-center text-white text-lg font-black" id="val-${p.id}">
+                            ${responses[p.id] || '5'}
+                        </div>
+                    </div>
+                    <div class="relative mb-4">
+                        <input type="range" min="1" max="10" value="${responses[p.id] || 5}" 
+                            oninput="updateVal('${p.id}', this.value)"
+                            class="w-full h-3 bg-slate-100 rounded-full appearance-none cursor-pointer">
+                        <div class="flex justify-between mt-4 text-sm font-bold text-slate-400">
+                            <span class="w-1/3 text-right">${p.labels[0]}</span>
+                            <span class="w-1/3 text-center text-indigo-500 font-black">${p.labels[1]}</span>
+                            <span class="w-1/3 text-left">${p.labels[2]}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = note + questions;
+            lucide.createIcons();
+        }
+
+        function setActiveTab(key) {
+            activeTab = key;
+            renderTabs();
+            renderQuestions();
+        }
+
+        function updateVal(id, val) {
+            responses[id] = val;
+            document.getElementById(`val-${id}`).innerText = val;
+        }
+
+        function showInfo(title, text) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-content').innerText = text;
+            document.getElementById('modal-overlay').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-overlay').classList.add('hidden');
+        }
+
+        function toggleAbout() {
+            showInfo("אודות Contact Ways", "מערכת זו נועדה לעזור לרקדנים לנתח ולשפר את מיומנויות הקונטאקט שלהם דרך רפלקציה על צירים פיזיים ומנטליים.");
+        }
+
+        function saveData() {
+            const btn = document.getElementById('save-btn');
+            btn.innerHTML = `<i data-lucide="check-circle" class="w-7 h-7"></i> הנתונים נשמרו`;
+            btn.classList.replace('bg-slate-900', 'bg-emerald-500');
+            lucide.createIcons();
+            setTimeout(() => {
+                btn.innerHTML = `<i data-lucide="save" class="w-7 h-7"></i> שמירת איטרציה`;
+                btn.classList.replace('bg-emerald-500', 'bg-slate-900');
+                lucide.createIcons();
+            }, 2000);
+        }
+
+        // Initialize
+        renderTabs();
+        renderQuestions();
+        lucide.createIcons();
+    </script>
+</body>
+</html>
