@@ -274,6 +274,15 @@
                 info: {
                     about: `מערכת Contact Ways נסמכת על שילוב בין מחקר בתחום הסנכרון הלא-מילולי (Nonverbal Synchrony) ותיאוריות של יצירת משמעות משותפת (Participatory Sense-making).\n\nהכלי נועד לתמוך בפיצוח מיומנויות פיזיות, מנטליות ורגשיות בריקוד קונטאקט אימפרוביזציה. ניתן כמובן ליישם את הכלי לאינטראקציות דיאדיות פיזיות נוספות.\n\nהמערכת בנויה ל-3 רמות שימוש:\n1. קריאה כללית של הפרמטרים היוצרת המשגה של חווית הריקוד.\n2. רפלקציה לאחר הריקוד.\n3. מיקוד לריקוד הבא.\n\n**התאמה אישית:** ניתן להתאים את סט השאלות המנחות באופן מלא דרך תפריט "ניהול נתונים", על ידי הורדת הקובץ, עריכתו ב-Google Sheets והעלאתו מחדש.\n\n**על היוצר:**\nזוהר רבינוביץ' - הרפתקן, מכור לאתגרים. היום אני בוחר אותם ברכות ומודה בנימוס לאלה שלא נבחרו. מנחה אילתור וקונטקט משנת 1994. בוגר החוג לתנועה באקדמיה ע"ש רובין בירושלים, לימודי תנועה מתקדמים עם פרופ' עמוס חץ, השתלמתי בגשטלט גוף נפש, הידרותרפיה, חינוך מיוחד, מטפל במגע ובגישה הנוירו התפתחותית תפקודית. ממייסדי הבוגי הירושלמי - חלוץ הריקוד החופשי, קונטק צבע, ג'ם ים ועוד הרפתקאות. הנחתי סדנאות לאורך השנים בפסטיבלים בארץ, בחו"ל, למדתי תנועה באקדמיה בי"ם ובמכללות לרפואה אלטרנטיבית. הפקתי ורקדתי במסגרות פרילנס שונות, עם נמרוד פריד, ענת שמגר, עמוס חץ ואמיר קולבן. כיום מלמד ומטפל בקליניקה הפרטית ומצלם יופי אנושי.\n\nמוזמנים לפנות ליוצר האפליקציה במייל: ZOHARRB@gmail.com`
                 },
+                dataMenu: {
+                    personalTitle: "נתונים אישיים (היסטוריה)",
+                    exportHist: "ייצוא נתונים אישיים",
+                    importHist: "ייבוא נתונים אישיים",
+                    qTitle: "תבנית שאלון",
+                    exportQ: "ייצוא שאלון לגוגל שיטס",
+                    importQ: "ייבוא שאלון מותאם",
+                    back: "חזור"
+                },
                 historyLabels: { single: "תצוגה בודדת", overlay: "תצוגת Overlay", table: "טבלת נתונים", current: "נתונים נוכחיים", map: "מפת איכויות הריקוד", noData: "אין מספיק נתונים", param: "פרמטר", desc: "הצגת 4 הגרסאות האחרונות יחד להשוואה" }
             },
             en: {
@@ -300,6 +309,15 @@
                 },
                 info: { 
                     about: `The Contact Ways system relies on the combination of Nonverbal Synchrony research and Participatory Sense-making theories.\n\nThe tool is designed to support the decoding of physical, mental, and emotional skills in Contact Improvisation. It can naturally be applied to other physical dyadic interactions.\n\nThe system has 3 levels of use:\n1. General reading of the parameters, creating conceptualization of the dance experience.\n2. Post-dance reflection.\n3. Focusing for the next dance.\n\n**Customization:** You can fully customize the guiding questions via the "Data Management" menu by downloading the file, editing it in Google Sheets, and re-uploading it.\n\n**About the Creator:**\nZohar Rabinovich - Adventurer, addicted to challenges. Today I choose them softly and politely decline the rest. Improvisation and Contact facilitator since 1994. Graduate of the Movement Department at the Rubin Academy in Jerusalem, advanced movement studies with Prof. Amos Hetz, trained in Body-Mind Gestalt, Hydrotherapy, Special Education, touch therapist, and Neuro-Developmental Functional approach. Co-founder of the Jerusalem Boogie - pioneer of free dance, Color Contact, Sea Jam, and other adventures. Facilitated workshops over the years at festivals in Israel and abroad, taught movement at the Academy in Jerusalem and alternative medicine colleges. Produced and danced in various freelance frameworks with Nimrod Fried, Anat Shamgar, Amos Hetz, and Amir Kolben. Currently teaches and treats in a private clinic and photographs human beauty.\n\nYou are welcome to contact the app creator by email: ZOHARRB@gmail.com`
+                },
+                dataMenu: {
+                    personalTitle: "Personal History",
+                    exportHist: "Export History (JSON)",
+                    importHist: "Import History (JSON)",
+                    qTitle: "Questionnaire Template",
+                    exportQ: "Export Template (CSV)",
+                    importQ: "Import Template (CSV)",
+                    back: "Back"
                 },
                 historyLabels: { single: "Single", overlay: "Overlay", table: "Table", current: "Current Data", map: "Dance Quality Map", noData: "Not enough data", param: "Parameter", desc: "Overlay of last 4 versions" }
             }
@@ -371,6 +389,23 @@
             document.getElementById('ui-ai-custom-label').innerHTML = `<i data-lucide="message-square-plus" class="w-5 h-5 inline"></i> ` + (lang === 'he' ? 'שאלה או בקשה אישית ליועץ ה-AI (אופציונלי):' : 'Custom question for AI (Optional):');
             document.getElementById('ai-custom-request').placeholder = lang === 'he' ? 'לדוגמה: "הרגשתי כבד מדי היום..."' : 'e.g., "I felt very heavy today..."';
 
+            // Data Modal Translations
+            if(c.dataMenu) {
+                document.getElementById('data-modal-title').innerText = c.data;
+                document.getElementById('data-personal-title').innerText = c.dataMenu.personalTitle;
+                document.getElementById('data-export-hist').innerText = c.dataMenu.exportHist;
+                document.getElementById('data-import-hist').innerText = c.dataMenu.importHist;
+                document.getElementById('data-q-title').innerText = c.dataMenu.qTitle;
+                document.getElementById('data-export-q').innerText = c.dataMenu.exportQ;
+                document.getElementById('data-import-q').innerText = c.dataMenu.importQ;
+                document.getElementById('data-close-btn').innerText = c.dataMenu.back;
+            }
+
+            // AI Modal Translations
+            document.getElementById('ai-modal-title').innerText = lang === 'he' ? 'הפרומפט הועתק!' : 'Prompt Copied!';
+            document.getElementById('ai-modal-desc').innerText = lang === 'he' ? 'בחרו באיזו אפליקציה/אתר AI לפתוח כדי להדביק את הבקשה:' : 'Choose your preferred AI to paste the prompt:';
+            document.getElementById('ai-modal-close').innerText = lang === 'he' ? 'סגור' : 'Close';
+
             // Populate AI Experts
             const expertSelect = document.getElementById('ai-expert-select');
             expertSelect.innerHTML = Object.entries(c.experts).map(([key, val]) => `<option value="${key}" class="text-slate-900">${val}</option>`).join('');
@@ -388,6 +423,7 @@
         }
 
         function getVal(obj) {
+            if(!obj) return '';
             return obj[lang] || obj['he']; // fallback to hebrew
         }
 
@@ -477,24 +513,25 @@
 
         function showInfoModal(catId, paramId) {
             const p = matrixParams[catId].params.find(x => x.id === paramId);
-            const info = getVal(p.info);
+            const info = p.info; 
             const c = t[lang];
             
             document.getElementById('info-title').innerText = getVal(p.label);
-            document.getElementById('info-desc').innerText = info.desc;
+            document.getElementById('info-desc').innerText = getVal(info.desc);
             
             const statesDiv = document.getElementById('info-states');
             if(info.under) {
                 statesDiv.classList.remove('hidden');
                 document.getElementById('info-under-label').innerText = lang === 'he' ? 'חסר (Under):' : 'Under:';
-                document.getElementById('info-under-desc').innerText = info.under;
+                document.getElementById('info-under-desc').innerText = getVal(info.under);
                 document.getElementById('info-flow-label').innerText = lang === 'he' ? 'מאוזן (Flow):' : 'Flow:';
-                document.getElementById('info-flow-desc').innerText = info.flow;
+                document.getElementById('info-flow-desc').innerText = getVal(info.flow);
                 document.getElementById('info-over-label').innerText = lang === 'he' ? 'עודף (Over):' : 'Over:';
-                document.getElementById('info-over-desc').innerText = info.over;
+                document.getElementById('info-over-desc').innerText = getVal(info.over);
             } else {
                 statesDiv.classList.add('hidden');
             }
+            document.getElementById('info-close-btn').innerText = lang === 'he' ? 'סגור' : 'Close';
             openModal('info');
         }
 
@@ -506,6 +543,7 @@
                 document.getElementById('info-title').innerText = c.about;
                 document.getElementById('info-desc').innerText = c.info.about;
                 document.getElementById('info-states').classList.add('hidden');
+                document.getElementById('info-close-btn').innerText = lang === 'he' ? 'סגור' : 'Close';
                 document.getElementById('modal-info').classList.remove('hidden');
             } else {
                 origOpenModal(id);
@@ -805,26 +843,6 @@
             </div>`;
         }
 
-        async function shareResultFromJSON(datasets) {
-            const c = t[lang];
-            let text = `${c.title} - ${lang === 'he' ? 'תוצאות' : 'Results'}\n\n`;
-            datasets.forEach(d => {
-                text += `--- ${d.label} ---\n`;
-                Object.values(matrixParams).forEach(cat => {
-                    cat.params.forEach(p => {
-                        text += `${getVal(p.label)}: ${d.data[p.id] || 5}/10\n`;
-                    });
-                });
-                text += '\n';
-            });
-            if (navigator.share) {
-                try { await navigator.share({ title: `${c.title} Results`, text: text }); } catch (err) {}
-            } else {
-                navigator.clipboard.writeText(text);
-                alert(c.resultCopied);
-            }
-        }
-
         // --- DATA MANAGEMENT ---
         function exportHistoryJSON() {
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(historyData, null, 2));
@@ -900,13 +918,6 @@
             };
             reader.readAsText(file);
             e.target.value = '';
-        }
-
-        function clearAllData() {
-            if(confirm(lang === 'he' ? 'האם אתה בטוח שברצונך לאפס הכל?' : 'Are you sure?')) {
-                localStorage.clear();
-                window.location.reload();
-            }
         }
     </script>
 </body>
