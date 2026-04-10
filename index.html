@@ -250,7 +250,10 @@
         <div class="max-w-4xl mx-auto p-6">
             <div class="flex justify-between items-center mb-6 sticky top-0 bg-white py-2 z-10 border-b border-slate-100">
                 <h2 id="history-title" class="text-3xl font-black text-slate-900">הצגת נתונים</h2>
-                <button onclick="closeModal('history')" class="p-3 bg-slate-200 hover:bg-slate-300 rounded-full text-slate-800 transition-colors"><i data-lucide="x" class="w-6 h-6"></i></button>
+                <div class="flex items-center gap-2">
+                    <button onclick="openModal('help-history')" class="p-3 bg-indigo-600 hover:bg-indigo-700 rounded-full text-white transition-colors shadow-sm" title="עזרה"><i data-lucide="help-circle" class="w-5 h-5"></i></button>
+                    <button onclick="closeModal('history')" class="p-3 bg-slate-200 hover:bg-slate-300 rounded-full text-slate-800 transition-colors"><i data-lucide="x" class="w-6 h-6"></i></button>
+                </div>
             </div>
             
             <div class="space-y-6 pb-24">
@@ -406,6 +409,61 @@
             </div>
             <div class="p-5 border-t border-slate-100 flex-shrink-0">
                 <button onclick="closeModal('help-ai')" class="w-full py-3.5 bg-indigo-600 text-white rounded-xl font-black hover:bg-indigo-700 transition-colors">הבנתי, בואו נתחיל</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal: History / Data View -->
+    <div id="modal-help-history" class="fixed inset-0 z-[150] bg-slate-950/60 p-6 flex items-end justify-center backdrop-blur-sm hidden" onclick="closeModal('help-history')">
+        <div class="bg-white rounded-[2rem] w-full max-w-lg shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-200 max-h-[85vh] flex flex-col" onclick="event.stopPropagation()">
+            <div class="p-6 bg-indigo-600 flex justify-between items-center flex-shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                        <i data-lucide="layout-grid" class="w-5 h-5 text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-black text-white">עזרה — הצגת נתונים</h3>
+                </div>
+                <button onclick="closeModal('help-history')" class="p-2 bg-white rounded-full text-indigo-700 hover:bg-indigo-50 transition-colors shadow-md">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto no-scrollbar space-y-4 dir-text-start">
+
+                <p class="text-sm text-slate-600 leading-relaxed">חלון זה מציג את כל הנתונים שנשמרו לאורך הזמן, בשלוש תצוגות שונות:</p>
+
+                <div class="space-y-3">
+
+                    <div class="bg-indigo-50 rounded-2xl p-4 border border-indigo-100">
+                        <h4 class="font-black text-indigo-800 text-base mb-1 flex items-center gap-2">
+                            <i data-lucide="radio" class="w-4 h-4"></i> תצוגה בודדת — מפת רדאר
+                        </h4>
+                        <p class="text-sm text-slate-700 leading-relaxed">מציגה את נתוני סשן אחד כגרף רדאר (עכבה). כל ציר מייצג פרמטר — ככל שהנקודה קרובה יותר למרכז, כך הערך נמוך יותר (Under). ניתן לדפדף בין איטרציות שמורות עם חצים, או לצפות בנתונים הנוכחיים (LIVE).</p>
+                    </div>
+
+                    <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                        <h4 class="font-black text-slate-800 text-base mb-1 flex items-center gap-2">
+                            <i data-lucide="layers" class="w-4 h-4 text-indigo-500"></i> תצוגת Overlay — השוואה
+                        </h4>
+                        <p class="text-sm text-slate-700 leading-relaxed">מציגה עד 4 סשנים אחרונים <strong>זה על גבי זה</strong> באותו גרף רדאר. מועיל לראות שינויים לאורך זמן — כיצד פרמטרים מסוימים השתנו מסשן לסשן.</p>
+                    </div>
+
+                    <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                        <h4 class="font-black text-slate-800 text-base mb-1 flex items-center gap-2">
+                            <i data-lucide="table" class="w-4 h-4 text-indigo-500"></i> טבלת נתונים — מספרים גולמיים
+                        </h4>
+                        <p class="text-sm text-slate-700 leading-relaxed">מציגה את כל הפרמטרים בכל הסשנים בטבלה אופקית. הצבעים מסמנים: <span class="font-bold text-amber-600">כתום = Under</span>, <span class="font-bold text-indigo-600">סגול = Flow</span>, <span class="font-bold text-rose-500">אדום = Over</span>.</p>
+                    </div>
+
+                </div>
+
+                <div class="bg-emerald-50 rounded-2xl p-4 border border-emerald-100 text-sm">
+                    <p class="font-bold text-emerald-800 flex items-center gap-2 mb-1"><i data-lucide="lightbulb" class="w-4 h-4"></i> טיפ</p>
+                    <p class="text-emerald-900/80">לחץ על כפתור <strong>"שמירת איטרציה"</strong> בסוף כל סשן כדי שהנתונים יופיעו כאן. ניתן גם לשתף את גרף הרדאר כתמונה.</p>
+                </div>
+
+            </div>
+            <div class="p-5 border-t border-slate-100 flex-shrink-0">
+                <button onclick="closeModal('help-history')" class="w-full py-3.5 bg-indigo-600 text-white rounded-xl font-black hover:bg-indigo-700 transition-colors">הבנתי</button>
             </div>
         </div>
     </div>
@@ -879,7 +937,7 @@
             return [];
         }
 
-        function buildRadarSVG(datasets, size = 300) {
+        function buildRadarSVG(datasets, size = 420) {
             const allParams = [];
             Object.values(matrixParams).forEach(cat => cat.params.forEach(p => allParams.push(p)));
             
