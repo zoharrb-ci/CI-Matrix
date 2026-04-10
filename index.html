@@ -3,41 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact Ways - Pro Matrix</title>
+    <title>Contact Ways - Design System V2.05</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        /* Contact Ways - Official Design System */
         :root {
             --color-brand-primary: #3730a3;    /* Indigo 900 */
             --color-brand-accent: #4f46e5;     /* Indigo 600 */
             --color-bg-main: #f1f5f9;          /* Slate 100 */
             --color-text-dark: #0f172a;        /* Slate 950 */
             --color-text-muted: #64748b;       /* Slate 500 */
-
             --color-under: #fb923c;            /* Orange 400 */
             --color-flow: #34d399;             /* Emerald 400 */
             --color-over: #fb7185;             /* Rose 400 */
-
             --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
             --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
             --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
-            
-            --radius-card: 2rem;               /* 32px */
+            --radius-card: 2rem;               /* 32px per spec */
         }
 
         body { 
             font-family: 'Assistant', sans-serif; 
             background-color: var(--color-bg-main); 
             color: var(--color-text-dark);
+            -webkit-font-smoothing: antialiased;
         }
-        
-        .tab-active { 
-            border-bottom: 3px solid var(--color-brand-accent); 
-            color: var(--color-brand-accent); 
-            font-weight: 700; 
+
+        /* Glassmorphism Overlay */
+        .glass-overlay {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 100;
         }
 
         /* Category Cards */
@@ -59,7 +58,7 @@
             border-bottom: 1px solid #e2e8f0;
         }
 
-        /* Custom Range Slider */
+        /* Matrix Sliders */
         input[type="range"] {
             -webkit-appearance: none;
             width: 100%;
@@ -88,531 +87,349 @@
             background: var(--color-brand-accent);
         }
 
-        /* Matrix Labels */
+        /* Labels */
         .label-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
             gap: 0.5rem;
-            margin-top: 0.5rem;
+            margin-top: 0.75rem;
         }
         .label-item {
-            font-size: 0.65rem;
+            font-size: 0.65rem; /* ~9px */
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            text-align: center;
         }
-        .label-under { color: var(--color-under); text-align: right; }
-        .label-flow  { color: var(--color-flow); text-align: center; }
-        .label-over  { color: var(--color-over); text-align: left; }
+        .label-under { color: var(--color-under); }
+        .label-flow  { color: var(--color-flow); }
+        .label-over  { color: var(--color-over); }
+
+        /* Tooltip Style */
+        .info-trigger {
+            cursor: help;
+            color: var(--color-text-muted);
+            transition: color 0.2s;
+        }
+        .info-trigger:hover { color: var(--color-brand-accent); }
+
+        .ai-consult-container {
+            background: white;
+            border-right: 4px solid var(--color-brand-accent);
+            padding: 1.25rem;
+            box-shadow: var(--shadow-md);
+        }
+        .ai-bubble {
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+            font-style: italic;
+        }
+
+        .tab-active { 
+            color: var(--color-brand-accent); 
+            border-bottom: 3px solid var(--color-brand-accent);
+            font-weight: 700;
+        }
+
+        /* Custom Scrollbar */
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
 <body class="min-h-screen">
 
-    <!-- Navigation Header -->
-    <nav class="bg-white border-b sticky top-0 z-50 px-4 py-3 flex justify-between items-center shadow-sm">
-        <div class="flex items-center gap-2">
-            <div class="bg-indigo-600 p-2 rounded-lg text-white">
-                <i data-lucide="activity"></i>
+    <!-- Header Navigation -->
+    <nav class="bg-white border-b sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <div class="bg-indigo-900 p-2 rounded-xl text-white">
+                <i data-lucide="activity" class="w-6 h-6"></i>
             </div>
-            <h1 class="text-xl font-extrabold tracking-tight">Contact <span class="text-indigo-600">Ways</span></h1>
+            <h1 class="text-xl font-[900] text-indigo-900 tracking-tight">Contact <span class="text-indigo-600">Ways</span></h1>
         </div>
-        <div class="flex gap-4 overflow-x-auto no-scrollbar">
-            <button onclick="switchTab('input')" id="tab-input" class="pb-1 tab-active flex items-center gap-1 whitespace-nowrap"><i data-lucide="edit-3" class="w-4"></i> מיפוי</button>
-            <button onclick="switchTab('history')" id="tab-history" class="pb-1 flex items-center gap-1 whitespace-nowrap"><i data-lucide="bar-chart-2" class="w-4"></i> היסטוריה</button>
-            <button onclick="switchTab('ai')" id="tab-ai" class="pb-1 flex items-center gap-1 whitespace-nowrap"><i data-lucide="sparkles" class="w-4"></i> התייעצות AI</button>
-            <button onclick="switchTab('settings')" id="tab-settings" class="pb-1 flex items-center gap-1 whitespace-nowrap"><i data-lucide="settings" class="w-4"></i> ניהול</button>
+        <div class="flex gap-6">
+            <button onclick="switchTab('input')" id="tab-input" class="pb-1 tab-active text-sm">מיפוי</button>
+            <button onclick="switchTab('history')" id="tab-history" class="pb-1 text-slate-500 text-sm">היסטוריה</button>
+            <button onclick="switchTab('ai')" id="tab-ai" class="pb-1 text-slate-500 text-sm">ייעוץ AI</button>
         </div>
     </nav>
 
-    <main class="max-w-5xl mx-auto p-4 lg:p-8">
+    <main class="max-w-5xl mx-auto p-6 md:p-10">
         
-        <!-- SECTION 1: DATA INPUT -->
-        <section id="section-input" class="space-y-6">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-6">
+        <!-- MAPPING SECTION -->
+        <section id="section-input" class="space-y-8">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                 <div>
-                    <h2 class="text-3xl font-black text-indigo-900">מיפוי סשן תנועה</h2>
-                    <p class="text-slate-500 font-medium mt-1">הזז את הסליידרים כדי לשקף את הדינמיקה שחווית במפגש התנועתי.</p>
+                    <h2 class="text-4xl font-[900] text-indigo-900 leading-none">מיפוי סשן</h2>
+                    <p class="text-slate-500 font-light mt-2 max-w-md">נתח את איכויות התנועה והתקשורת שחווית. המטריצה עוזרת להגדיר את ה-Flow שלך.</p>
                 </div>
-                <button onclick="saveCurrentSession()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-2xl font-bold shadow-lg transition flex items-center gap-2">
-                    <i data-lucide="save" class="w-5"></i> שמירת סשן
+                <button onclick="saveSession()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-10 py-4 rounded-[0.75rem] font-bold shadow-lg transition-all flex items-center gap-2">
+                    <i data-lucide="check-circle" class="w-5 h-5"></i> שמירת נתונים
                 </button>
             </div>
 
-            <div id="matrix-container" class="grid gap-8 md:grid-cols-2">
-                <!-- Matrix Categories will be injected here -->
+            <div id="matrix-grid" class="grid gap-8 md:grid-cols-2">
+                <!-- Cards will be injected by JS -->
             </div>
         </section>
 
-        <!-- SECTION 2: HISTORY & ANALYSIS -->
-        <section id="section-history" class="hidden space-y-8">
-            <div class="grid md:grid-cols-2 gap-8">
-                <div class="matrix-card p-6">
-                    <h3 class="text-xl font-bold mb-4 flex items-center gap-2 text-indigo-900 border-b pb-3"><i data-lucide="target" class="text-indigo-500"></i> מפת איכויות (נוכחי מול ממוצע)</h3>
-                    <div class="aspect-square">
-                        <canvas id="radarChart"></canvas>
-                    </div>
+        <!-- AI SECTION -->
+        <section id="section-ai" class="hidden space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div class="matrix-card">
+                <div class="matrix-card-header bg-indigo-600 text-white flex justify-between items-center">
+                    <h2 class="text-xl font-[800]">התייעצות מומחה AI</h2>
+                    <i data-lucide="sparkles" class="w-6 h-6 opacity-50"></i>
                 </div>
-                <div class="matrix-card p-6 overflow-hidden">
-                    <h3 class="text-xl font-bold mb-4 flex items-center gap-2 text-indigo-900 border-b pb-3"><i data-lucide="history" class="text-indigo-500"></i> היסטוריית מילויים</h3>
-                    <div class="overflow-y-auto h-[400px] pr-2 custom-scroll">
-                        <table class="w-full text-sm text-right">
-                            <thead class="bg-slate-50 sticky top-0 shadow-sm z-10">
-                                <tr>
-                                    <th class="p-3 rounded-tr-lg">תאריך וזמן</th>
-                                    <th class="p-3">ממוצע מכניקה</th>
-                                    <th class="p-3">ממוצע נוכחות</th>
-                                    <th class="p-3 rounded-tl-lg">ממוצע זמן</th>
-                                </tr>
-                            </thead>
-                            <tbody id="history-table-body">
-                                <!-- Data rows -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- SECTION 3: AI CONSULTATION -->
-        <section id="section-ai" class="hidden space-y-6">
-            <div class="matrix-card p-8 max-w-3xl mx-auto border-t-4 border-t-indigo-500">
-                <div class="flex items-center gap-4 mb-6 border-b pb-4">
-                    <div class="bg-indigo-100 p-3 rounded-2xl text-indigo-600">
-                        <i data-lucide="brain-circuit" size="28"></i>
-                    </div>
+                <div class="p-8 space-y-6">
                     <div>
-                        <h2 class="text-2xl font-black text-indigo-900">התייעצות עם מומחה AI</h2>
-                        <p class="text-slate-500 text-sm font-medium">ייצור פרומפט מותאם אישית המשלב את המטריצה המלאה שלך.</p>
-                    </div>
-                </div>
-
-                <div class="space-y-6 mb-6">
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-2">בחר מורה/מומחה למתן חוות הדעת:</label>
-                        <select id="ai-teacher" onchange="updateAIPrompt()" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-slate-800 appearance-none">
-                            <optgroup label="מייסדים ומורים קלאסיים">
-                                <option value="Nancy Stark Smith">ננסי סטארק סמית' (The Underscore & Focus)</option>
-                                <option value="Steve Paxton">סטיב פקסטון (Small Dance & Physics)</option>
-                                <option value="Ray Chung">ריי צ'ונג (Engineering & Momentum)</option>
-                                <option value="Karen Nelson">קארן נלסון (Post-Modern Listening)</option>
-                                <option value="Lisa Nelson">ליסה נלסון (Tuning Scores)</option>
-                            </optgroup>
-                            <optgroup label="גישות עכשוויות וטיפוליות">
-                                <option value="DMT Therapist">מטפל/ת בתנועה (DMT - ויסות והתקשרות)</option>
-                                <option value="Neurobiologist">חוקר/ת נוירוביולוגיה של סנכרון</option>
-                                <option value="Anatomy Expert">מומחה לאנטומיה יישומית</option>
-                            </optgroup>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">בחר דמות הוראה:</label>
+                        <select id="ai-teacher" onchange="updatePrompt()" class="w-full p-4 bg-slate-50 border rounded-2xl font-bold outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="Nancy Stark Smith">ננסי סטארק סמית' (The Underscore)</option>
+                            <option value="Steve Paxton">סטיב פקסטון (Small Dance & Physics)</option>
+                            <option value="Ray Chung">ריי צ'ונג (Momentum & Engineering)</option>
+                            <option value="DMT Therapist">מטפל/ת בתנועה (ויסות והתקשרות)</option>
                         </select>
                     </div>
-                    
+
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-2">מה תרצה לשאול או לחקור לגבי הסשן?</label>
-                        <textarea id="ai-user-query" class="w-full p-4 border border-slate-200 bg-slate-50 rounded-xl h-28 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="תאר תחושה ספציפית, אתגר שעלה בריקוד, או בקש דגשים לשיפור..."></textarea>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">מה תרצה לחקור?</label>
+                        <textarea id="ai-query" oninput="updatePrompt()" class="w-full p-4 bg-slate-50 border rounded-2xl h-32 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="תאר אתגר, תחושה או שאלה שעלתה בריקוד..."></textarea>
                     </div>
-                </div>
 
-                <div class="bg-indigo-50 p-6 rounded-2xl border border-indigo-100 mb-6">
-                    <h4 class="text-xs font-black text-indigo-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                        <i data-lucide="code" size="14"></i> תצוגה מקדימה של הפרומפט שנוצר:
-                    </h4>
-                    <div id="ai-prompt-preview" class="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto custom-scroll pr-2 font-medium"></div>
-                </div>
+                    <div class="bg-slate-50 p-6 rounded-3xl border border-slate-100 ai-bubble">
+                        <h4 class="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-3 flex items-center gap-2">
+                            <i data-lucide="message-square" class="w-3 h-3"></i> תצוגת הפרומפט שיישלח:
+                        </h4>
+                        <div id="prompt-preview" class="text-sm text-slate-600 leading-relaxed max-h-48 overflow-y-auto custom-scroll"></div>
+                    </div>
 
-                <div class="flex flex-col sm:flex-row flex-wrap gap-3 pt-2">
-                    <button onclick="copyPrompt()" class="bg-slate-900 text-white px-8 py-4 rounded-xl font-black flex justify-center items-center gap-2 hover:bg-slate-800 transition shadow-md w-full sm:w-auto">
-                        <i data-lucide="copy" class="w-5 h-5"></i> העתק פרומפט ופתח
+                    <button onclick="copyPrompt()" class="w-full bg-slate-950 text-white py-5 rounded-2xl font-black flex justify-center items-center gap-3 hover:bg-indigo-900 transition">
+                        <i data-lucide="copy" class="w-5 h-5"></i> העתק פרומפט ופתח צ'אט
                     </button>
-                    <div class="flex gap-3 w-full sm:w-auto flex-1">
-                        <a id="btn-chatgpt" href="#" target="_blank" class="flex-1 bg-[#10a37f] text-white px-4 py-4 rounded-xl font-bold flex justify-center items-center gap-2 hover:opacity-90 transition shadow-sm">ChatGPT</a>
-                        <a id="btn-claude" href="#" target="_blank" class="flex-1 bg-[#d97757] text-white px-4 py-4 rounded-xl font-bold flex justify-center items-center gap-2 hover:opacity-90 transition shadow-sm">Claude</a>
-                        <a id="btn-gemini" href="#" target="_blank" class="flex-1 bg-[#4f46e5] text-white px-4 py-4 rounded-xl font-bold flex justify-center items-center gap-2 hover:opacity-90 transition shadow-sm">Gemini</a>
-                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- SECTION 4: SETTINGS & DATA MGMT -->
-        <section id="section-settings" class="hidden space-y-6">
-            <div class="grid md:grid-cols-2 gap-6">
-                <div class="matrix-card p-8 border-t-4 border-t-emerald-500">
-                    <h3 class="font-black text-lg mb-6 flex items-center gap-2 text-slate-800"><i data-lucide="database" class="text-emerald-500"></i> ניהול היסטוריית מילויים</h3>
-                    <p class="text-sm text-slate-500 mb-6">שמור את התוצאות האישיות שלך כקובץ גיבוי, או טען נתונים קודמים להמשך מעקב.</p>
-                    <div class="flex gap-3">
-                        <button onclick="exportUserData()" class="flex-1 bg-slate-50 border border-slate-200 p-4 rounded-xl hover:bg-emerald-50 hover:border-emerald-200 transition text-sm font-bold text-slate-700 flex flex-col items-center gap-2">
-                            <i data-lucide="download" class="text-emerald-500"></i> ייצוא נתונים
-                        </button>
-                        <label class="flex-1 bg-slate-50 border border-slate-200 p-4 rounded-xl hover:bg-emerald-50 hover:border-emerald-200 transition text-sm font-bold text-slate-700 flex flex-col items-center gap-2 cursor-pointer">
-                            <i data-lucide="upload" class="text-emerald-500"></i> ייבוא נתונים
-                            <input type="file" class="hidden" onchange="importUserData(event)">
-                        </label>
-                    </div>
+        <!-- HISTORY SECTION -->
+        <section id="section-history" class="hidden space-y-6">
+            <div class="matrix-card p-8">
+                <h2 class="text-2xl font-black text-indigo-900 mb-6">מגמות ונתונים</h2>
+                <div class="aspect-[16/9] md:aspect-[21/9]">
+                    <canvas id="historyChart"></canvas>
                 </div>
-                <div class="matrix-card p-8 border-t-4 border-t-indigo-500">
-                    <h3 class="font-black text-lg mb-6 flex items-center gap-2 text-slate-800"><i data-lucide="layers" class="text-indigo-500"></i> הגדרות מבנה המטריצה</h3>
-                    <p class="text-sm text-slate-500 mb-6">ערוך את רשימת השאלות והפרמטרים על ידי ייצוא ל-JSON, עריכה, וטעינה מחדש.</p>
-                    <div class="flex gap-3">
-                        <button onclick="exportMatrix()" class="flex-1 bg-slate-50 border border-slate-200 p-4 rounded-xl hover:bg-indigo-50 hover:border-indigo-200 transition text-sm font-bold text-slate-700 flex flex-col items-center gap-2">
-                            <i data-lucide="download" class="text-indigo-500"></i> ייצוא מטריצה
-                        </button>
-                        <label class="flex-1 bg-slate-50 border border-slate-200 p-4 rounded-xl hover:bg-indigo-50 hover:border-indigo-200 transition text-sm font-bold text-slate-700 flex flex-col items-center gap-2 cursor-pointer">
-                            <i data-lucide="upload" class="text-indigo-500"></i> ייבוא מטריצה
-                            <input type="file" class="hidden" onchange="importMatrix(event)">
-                        </label>
-                    </div>
-                </div>
-            </div>
-            <div class="matrix-card p-6 bg-rose-50 border-rose-100 flex items-center justify-between">
-                <div>
-                    <h4 class="font-bold text-rose-900">איפוס מערכת</h4>
-                    <p class="text-sm text-rose-700">מחיקת כל הנתונים, ההיסטוריה וההגדרות מהדפדפן באופן בלתי הפיך.</p>
-                </div>
-                <button onclick="clearAllData()" class="bg-rose-600 hover:bg-rose-700 text-white px-6 py-3 rounded-xl font-bold shadow-sm transition">מחק הכל</button>
             </div>
         </section>
 
     </main>
 
+    <!-- Modal for Tooltips -->
+    <div id="info-modal" class="hidden fixed inset-0 glass-overlay flex items-center justify-center p-6">
+        <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl relative">
+            <button onclick="closeInfo()" class="absolute top-6 left-6 text-slate-400 hover:text-slate-900">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+            <div id="info-content" class="space-y-6 mt-4">
+                <!-- Content injected here -->
+            </div>
+        </div>
+    </div>
+
     <script>
-        // --- 13 PARAMETERS DATA STRUCTURE ---
-        let matrixData = {
-            mechanics: {
-                title: "מכניקה ופיזיקה",
-                params: [
-                    { id: 'weight', label: 'העברת משקל', under: 'הימנעות, נוקשות', flow: 'משקל רספונסיבי', over: 'קריסה פתאומית' },
-                    { id: 'poc', label: 'נקודת המגע (POC)', under: 'סטטית/קופצנית', flow: 'נושמת ומתגלגלת', over: 'הצמדות/דבק' },
-                    { id: 'skeletal', label: 'מבנה גרמי (Skeletal)', under: 'כוח שרירי בלבד', flow: 'יישור שלדי', over: 'נוקשות שלדית חוסמת' },
-                    { id: 'momentum', label: 'ניהול מומנטום', under: 'מהוסס, פחד ממהירות', flow: 'זרימה עם התנופה', over: 'פראי/חסר שליטה' },
-                    { id: 'tonus', label: 'ויסות טונס שרירי', under: 'רפיון יתר', flow: 'טונס אדפטיבי', over: 'טונס גבוה וקבוע' },
-                    { id: 'center', label: 'מרכז כובד וקונטרסט', under: 'מרכזים מנותקים', flow: 'מרכזים מתואמים', over: 'משיכה/דחיפה כוחנית' },
-                    { id: 'vectoring', label: 'החלקה וניתוב (Vectoring)', under: 'היצמדות נוקשה', flow: 'ניצול חיכוך לניתוב', over: 'החלקה לא מבוקרת' }
-                ]
+        // --- APP DATA CONFIGURATION ---
+        const matrixSchema = {
+            weight: {
+                label: "העברת משקל",
+                description: "האופן שבו אנו מוסרים את כובד הגוף לתוך המגע והמרחב.",
+                under: { title: "Under", text: "הימנעות ממתן משקל; 'החזקה' עצמית נוקשה. תחושה של פרטנר 'קל' מדי או מרוחק." },
+                flow: { title: "Flow", text: "משקל רספונסיבי; דיאלוג של כוחות שבו המשקל עובר כמידע זורם. הישענות בטוחה." },
+                over: { title: "Over", text: "קריסה; הפלת משקל פתאומית ללא התרעה. 'תלייה' כבדה שפוגעת ביכולת התנועה." }
             },
-            presence: {
-                title: "ציר המגע והתודעה",
-                params: [
-                    { id: 'repair', label: 'חוסן ותיקון', under: 'קפיאה באובדן מגע', flow: 'שבירה כהזדמנות', over: 'תפיסה מחדש בכוח' },
-                    { id: 'resonance', label: 'תהודה רגשית', under: 'תנועה מכנית/מנותקת', flow: 'חיבור אמפתי בטוח', over: 'הצפה רגשית' },
-                    { id: 'zeitgeber', label: 'איזון הובלה (Zeitgeber)', under: 'עקיבה פסיבית מוחלטת', flow: 'חילופין נזילים', over: 'הובלה מתמדת ונוקשה' }
-                ]
+            contact: {
+                label: "נקודת מגע",
+                description: "ה-Rolling Point of Contact כציר הניווט המרכזי.",
+                under: { title: "Under", text: "נקודת מגע סטטית או 'קופצנית'; ניתוקים תכופים וקושי לשמור על רצף." },
+                flow: { title: "Flow", text: "נקודת מגע נושמת ומתגלגלת (Rolling); המגע מוליך את התנועה במרחב באופן תלת-ממדי." },
+                over: { title: "Over", text: "הצמדות יתר; 'דבק' שמונע מהנקודה להתגלגל. הפעלת לחץ (Pushing) במקום גלגול." }
             },
-            timeline: {
-                title: "ציר הזמן והתפתחות",
-                params: [
-                    { id: 'invitation', label: 'גישוש והזמנה', under: 'המתנה פסיבית', flow: 'הצעות עדינות', over: 'פלישה למרחב' },
-                    { id: 'coreflow', label: 'העמקה (Core Flow)', under: 'היתקעות ברמה שטחית', flow: 'תחושת "אנחנו נרקדים"', over: 'אובדן שליטה באינטנסיביות' },
-                    { id: 'closing', label: 'סיום ופרידה', under: 'ניתוק פתאומי ומבוהל', flow: 'פרידה הדרגתית', over: 'קושי לשחרר וסחיטת זמן' }
-                ]
+            skeletal: {
+                label: "שימוש במבנה גרמי",
+                description: "הסתמכות על השלד (Alignment) מול מאמץ שרירי.",
+                under: { title: "Under", text: "הסתמכות על כוח שרירי בלבד; חוסר ניצול של המבנה לחיסכון באנרגיה." },
+                flow: { title: "Flow", text: "יישור שלדי המאפשר להעביר כוחות דרך העצמות לרצפה. תחושת יציבות נינוחה." },
+                over: { title: "Over", text: "נוקשות שלדית; שימוש במבנה ככלי לחסימה או לנעילה של הפרטנר." }
+            },
+            resonance: {
+                label: "תהודה רגשית",
+                description: "היכולת להרגיש את הפרטנר והסיטואציה מבלי להיאבד.",
+                under: { title: "Under", text: "תנועה מכנית ומנותקת מהחוויה הרגשית. אין השפעה הדדית." },
+                flow: { title: "Flow", text: "חיבור אמפתי גמיש המאפשר להרגיש מבלי לאבד מרכז." },
+                over: { title: "Over", text: "הצפה רגשית (Enmeshment) שפוגעת בבטיחות ובגבולות האישיים." }
+            },
+            leading: {
+                label: "איזון הובלה",
+                description: "הדינמיקה שבין הקשבה (Following) ליוזמה (Leading).",
+                under: { title: "Under", text: "עקיבה פסיבית מוחלטת (Pacing) ללא מתן אינפורמציה חזרה." },
+                flow: { title: "Flow", text: "חילופין נזילים וספונטניים; 'הקשבה אקטיבית' שמובילה להובלה משותפת." },
+                over: { title: "Over", text: "הובלה מתמדת ונוקשה ללא יכולת להקשיב לדחפי האחר." }
             }
         };
 
-        // Try load custom matrix config if exists
-        const savedMatrix = localStorage.getItem('cw_custom_matrix_full');
-        if (savedMatrix) {
-            try { matrixData = JSON.parse(savedMatrix); } catch(e){}
-        }
+        const categories = [
+            { title: "מכניקה ופיזיקה", ids: ['weight', 'contact', 'skeletal'] },
+            { title: "נוכחות ותקשורת", ids: ['resonance', 'leading'] }
+        ];
 
-        let userHistory = JSON.parse(localStorage.getItem('cw_user_history_full') || '[]');
         let currentSession = {};
-        let radarChartInstance = null;
+        let history = JSON.parse(localStorage.getItem('cw_v2_history') || '[]');
 
-        // --- CORE FUNCTIONS ---
-
-        function initApp() {
-            renderMatrixInput();
-            updateHistoryUI();
-            updateAIPrompt();
+        // --- UI CORE ---
+        window.onload = () => {
+            renderMatrix();
             lucide.createIcons();
-            document.getElementById('ai-user-query').addEventListener('input', updateAIPrompt);
-            document.getElementById('ai-teacher').addEventListener('change', updateAIPrompt);
-        }
+            updatePrompt();
+        };
 
-        function renderMatrixInput() {
-            const container = document.getElementById('matrix-container');
-            container.innerHTML = '';
+        function renderMatrix() {
+            const grid = document.getElementById('matrix-grid');
+            grid.innerHTML = '';
 
-            Object.keys(matrixData).forEach(catId => {
-                const category = matrixData[catId];
+            categories.forEach(cat => {
                 const card = document.createElement('div');
-                card.className = "matrix-card";
+                card.className = 'matrix-card';
                 
-                let html = `<div class="matrix-card-header"><h3 class="font-extrabold text-indigo-900 flex items-center gap-2 text-xl">
-                    <i data-lucide="layers" class="w-5 text-indigo-500"></i> ${category.title}</h3></div><div class="p-6">`;
-                
-                category.params.forEach(param => {
-                    const val = currentSession[param.id] || 50;
-                    currentSession[param.id] = val; // Initialize state
-
-                    html += `
-                        <div class="mb-8">
-                            <div class="flex justify-between items-center mb-3">
-                                <span class="font-bold text-slate-800">${param.label}</span>
-                                <span class="text-xs px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full font-black tracking-wider" id="val-${param.id}">${val}%</span>
+                let controlsHtml = '';
+                cat.ids.forEach(id => {
+                    const data = matrixSchema[id];
+                    currentSession[id] = 50;
+                    controlsHtml += `
+                        <div class="mb-10 last:mb-0">
+                            <div class="flex justify-between items-center mb-4">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold text-slate-800">${data.label}</span>
+                                    <button onclick="openInfo('${id}')" class="info-trigger">
+                                        <i data-lucide="info" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                                <span id="val-badge-${id}" class="text-xs font-black px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full">FLOW</span>
                             </div>
-                            <input type="range" class="w-full" 
-                                   oninput="updateVal('${param.id}', this.value)" 
-                                   value="${val}" min="0" max="100">
+                            <input type="range" min="0" max="100" value="50" oninput="updateRange('${id}', this.value)">
                             <div class="label-grid">
-                                <span class="label-item label-under">${param.under}</span>
-                                <span class="label-item label-flow">${param.flow}</span>
-                                <span class="label-item label-over">${param.over}</span>
+                                <span class="label-item label-under">Under</span>
+                                <span class="label-item label-flow">Flow</span>
+                                <span class="label-item label-over">Over</span>
                             </div>
                         </div>
                     `;
                 });
-                html += `</div>`;
-                card.innerHTML = html;
-                container.appendChild(card);
+
+                card.innerHTML = `
+                    <div class="matrix-card-header">
+                        <h3 class="font-[800] text-indigo-900">${cat.title}</h3>
+                    </div>
+                    <div class="p-8">${controlsHtml}</div>
+                `;
+                grid.appendChild(card);
             });
             lucide.createIcons();
         }
 
-        function updateVal(id, val) {
+        function updateRange(id, val) {
             currentSession[id] = parseInt(val);
-            const displayEl = document.getElementById(`val-${id}`);
-            displayEl.innerText = val + '%';
-            
-            // Dynamic color for value badge
-            if(val < 35) { displayEl.className = 'text-xs px-3 py-1 bg-orange-100 text-orange-700 rounded-full font-black tracking-wider'; }
-            else if(val > 65) { displayEl.className = 'text-xs px-3 py-1 bg-rose-100 text-rose-700 rounded-full font-black tracking-wider'; }
-            else { displayEl.className = 'text-xs px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full font-black tracking-wider'; }
-            
-            updateAIPrompt();
+            const badge = document.getElementById(`val-badge-${id}`);
+            if (val < 35) {
+                badge.innerText = "UNDER";
+                badge.className = "text-xs font-black px-3 py-1 bg-orange-100 text-orange-700 rounded-full";
+            } else if (val > 65) {
+                badge.innerText = "OVER";
+                badge.className = "text-xs font-black px-3 py-1 bg-rose-100 text-rose-700 rounded-full";
+            } else {
+                badge.innerText = "FLOW";
+                badge.className = "text-xs font-black px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full";
+            }
+            updatePrompt();
         }
 
-        function saveCurrentSession() {
-            const session = {
-                timestamp: new Date().toISOString(),
-                data: { ...currentSession }
-            };
-            userHistory.push(session);
-            localStorage.setItem('cw_user_history_full', JSON.stringify(userHistory));
-            
-            updateHistoryUI();
-            showToast("הסשן נשמר בהיסטוריה!");
+        // --- MODAL / TOOLTIP ---
+        function openInfo(id) {
+            const data = matrixSchema[id];
+            const content = document.getElementById('info-content');
+            content.innerHTML = `
+                <div>
+                    <h3 class="text-2xl font-black text-indigo-900 mb-1">${data.label}</h3>
+                    <p class="text-slate-500 font-light text-sm">${data.description}</p>
+                </div>
+                <div class="space-y-4 pt-4 border-t">
+                    <div class="p-4 rounded-2xl bg-orange-50 border border-orange-100">
+                        <strong class="block text-orange-700 text-xs uppercase mb-1">${data.under.title}</strong>
+                        <p class="text-xs text-orange-900/80 leading-relaxed">${data.under.text}</p>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-100">
+                        <strong class="block text-emerald-700 text-xs uppercase mb-1">${data.flow.title}</strong>
+                        <p class="text-xs text-emerald-900/80 leading-relaxed">${data.flow.text}</p>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-rose-50 border border-rose-100">
+                        <strong class="block text-rose-700 text-xs uppercase mb-1">${data.over.title}</strong>
+                        <p class="text-xs text-rose-900/80 leading-relaxed">${data.over.text}</p>
+                    </div>
+                </div>
+            `;
+            document.getElementById('info-modal').classList.remove('hidden');
+            lucide.createIcons();
         }
 
-        function updateHistoryUI() {
-            // Table
-            const tbody = document.getElementById('history-table-body');
-            tbody.innerHTML = '';
+        function closeInfo() {
+            document.getElementById('info-modal').classList.add('hidden');
+        }
+
+        // --- AI PROMPT ENGINE ---
+        function updatePrompt() {
+            const teacher = document.getElementById('ai-teacher').value;
+            const query = document.getElementById('ai-query').value || "{השאלה שלך}";
             
-            userHistory.slice().reverse().forEach(entry => {
-                const date = new Date(entry.timestamp).toLocaleString('he-IL', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
+            let systemInstr = `אתה מומחה לניתוח תנועה, טיפול בתנועה וקונטקט אימפרוביזציה. תפקידך לסייע למשתמש לעבד סשן תנועתי שביצע. אתה משתמש ב'מטריצת Contact Ways' המנתחת תנועה על רצף שבין Under (תת-תגובה), Flow (זרימה אינטגרטית) ו-Over (תגובת יתר). ענה בסגנון המקצועי של ${teacher}.`;
+            
+            let dataContext = `להלן הנתונים שנאספו מהסשן האחרון:\n`;
+            Object.keys(matrixSchema).forEach(id => {
+                const schema = matrixSchema[id];
+                const val = currentSession[id];
+                let state, desc;
+                if (val < 35) { state = "Under"; desc = schema.under.text; }
+                else if (val > 65) { state = "Over"; desc = schema.over.text; }
+                else { state = "Flow"; desc = schema.flow.text; }
                 
-                // Calculate category averages
-                let mechSum = 0, mechCount = 0, presSum = 0, presCount = 0, timeSum = 0, timeCount = 0;
-                
-                matrixData.mechanics.params.forEach(p => { if(entry.data[p.id]) { mechSum += entry.data[p.id]; mechCount++; }});
-                matrixData.presence.params.forEach(p => { if(entry.data[p.id]) { presSum += entry.data[p.id]; presCount++; }});
-                matrixData.timeline.params.forEach(p => { if(entry.data[p.id]) { timeSum += entry.data[p.id]; timeCount++; }});
-
-                const mechAvg = mechCount ? Math.round(mechSum/mechCount) : '-';
-                const presAvg = presCount ? Math.round(presSum/presCount) : '-';
-                const timeAvg = timeCount ? Math.round(timeSum/timeCount) : '-';
-
-                const row = document.createElement('tr');
-                row.className = "border-b border-slate-100 hover:bg-slate-50 transition";
-                row.innerHTML = `
-                    <td class="p-3 font-mono text-xs text-slate-500">${date}</td>
-                    <td class="p-3 font-bold text-slate-800">${mechAvg}%</td>
-                    <td class="p-3 font-bold text-slate-800">${presAvg}%</td>
-                    <td class="p-3 font-bold text-slate-800">${timeAvg}%</td>
-                `;
-                tbody.appendChild(row);
+                dataContext += `${schema.label}: המשתמש דיווח על מצב ${state} (${desc}).\n`;
             });
 
-            // Radar Chart
-            renderRadar();
-        }
-
-        function renderRadar() {
-            const ctx = document.getElementById('radarChart').getContext('2d');
-            const labels = [];
-            const currentValues = [];
-            const avgValues = [];
-
-            Object.values(matrixData).forEach(cat => {
-                cat.params.forEach(p => {
-                    labels.push(p.label);
-                    currentValues.push(currentSession[p.id] || 50);
-                    
-                    const sum = userHistory.reduce((acc, curr) => acc + (curr.data[p.id] || 50), 0);
-                    avgValues.push(userHistory.length ? Math.round(sum / userHistory.length) : 50);
-                });
-            });
-
-            if(radarChartInstance) radarChartInstance.destroy();
-
-            radarChartInstance = new Chart(ctx, {
-                type: 'radar',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'סשן נוכחי',
-                            data: currentValues,
-                            fill: true,
-                            backgroundColor: 'rgba(79, 70, 229, 0.2)',
-                            borderColor: '#4f46e5',
-                            pointBackgroundColor: '#4f46e5',
-                            borderWidth: 2
-                        },
-                        {
-                            label: 'ממוצע היסטורי',
-                            data: avgValues,
-                            fill: true,
-                            backgroundColor: 'rgba(148, 163, 184, 0.1)',
-                            borderColor: '#94a3b8',
-                            pointBackgroundColor: '#94a3b8',
-                            borderDash: [5, 5],
-                            borderWidth: 2
-                        }
-                    ]
-                },
-                options: {
-                    scales: {
-                        r: { 
-                            min: 0, max: 100, 
-                            ticks: { display: false, stepSize: 20 },
-                            pointLabels: { font: { family: 'Assistant', size: 10, weight: 'bold' }, color: '#64748b' }
-                        }
-                    },
-                    plugins: { legend: { position: 'bottom', labels: { font: { family: 'Assistant', weight: 'bold' } } } }
-                }
-            });
-        }
-
-        // --- AI PROMPT GENERATION ---
-
-        function updateAIPrompt() {
-            const userQuery = document.getElementById('ai-user-query').value || "[אנא הזן שאלה או נושא לחקירה לגבי הסשן]";
-            const teacherName = document.getElementById('ai-teacher').value;
-            
-            const intro = `אתה מומחה לניתוח תנועה, טיפול בתנועה וקונטקט אימפרוביזציה. תפקידך לסייע למשתמש לעבד סשן תנועתי שביצע. 
-עליך לענות כדמות המורה/מומחה: ${teacherName}. אמץ את סגנון החשיבה והמושגים האופייניים לו.
-אתה משתמש ב'מטריצת Contact Ways' המנתחת תנועה על רצף שבין Under (תת-תגובה/ניתוק), Flow (זרימה אינטגרטיבית) ו-Over (תגובת יתר/השתלטות). ענה בעברית, בצורה אמפתית, מקצועית ומעוררת מחשבה.\n\n`;
-            
-            let dataStr = "להלן הנתונים שנאספו מהסשן האחרון של המשתמש במטריצה (ערכים בטווח 0-100, הטווח המוזהב הוא 35-65):\n";
-            Object.values(matrixData).forEach(cat => {
-                dataContextHeader = `\n--- ${cat.title} ---\n`;
-                dataStr += dataContextHeader;
-                cat.params.forEach(p => {
-                    const val = currentSession[p.id] || 50;
-                    let state = "Flow";
-                    let desc = p.flow;
-                    if(val < 35) { state = "Under"; desc = p.under; }
-                    else if(val > 65) { state = "Over"; desc = p.over; }
-                    
-                    dataStr += `* ${p.label}: ציון ${val}% (מצב: ${state}). תיאור חוויה: "${desc}"\n`;
-                });
-            });
-
-            const fullPrompt = `${intro}${dataStr}\n\nשאלה ממוקדת מהמשתמש להמשך חקירה:\n"${userQuery}"`;
-            document.getElementById('ai-prompt-preview').innerText = fullPrompt;
-
-            // Update external links
-            const encoded = encodeURIComponent(fullPrompt);
-            document.getElementById('btn-chatgpt').href = `https://chat.openai.com/?q=${encoded}`;
-            document.getElementById('btn-claude').href = `https://claude.ai/new?q=${encoded}`;
-            document.getElementById('btn-gemini').href = `https://gemini.google.com/app?q=${encoded}`;
+            const fullPrompt = `${systemInstr}\n\n${dataContext}\n\nשאלת המשתמש: ${query}`;
+            document.getElementById('prompt-preview').innerText = fullPrompt;
         }
 
         function copyPrompt() {
-            const txt = document.getElementById('ai-prompt-preview').innerText;
-            const temp = document.createElement('textarea');
-            temp.value = txt;
-            document.body.appendChild(temp);
-            temp.select();
-            document.execCommand('copy');
-            document.body.removeChild(temp);
-            showToast("הפרומפט הועתק ללוח!");
+            const txt = document.getElementById('prompt-preview').innerText;
+            navigator.clipboard.writeText(txt).then(() => {
+                alert("הפרומפט הועתק! פתח כעת מודל AI והדבק אותו.");
+                window.open("https://chat.openai.com", "_blank");
+            });
         }
 
-        // --- DATA MANAGEMENT ---
-
-        function exportUserData() {
-            downloadJSON(userHistory, `cw_history_${new Date().toISOString().split('T')[0]}.json`);
-        }
-
-        function importUserData(e) {
-            const file = e.target.files[0];
-            if(!file) return;
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                try {
-                    const imported = JSON.parse(event.target.result);
-                    if(Array.isArray(imported)) {
-                        userHistory = imported;
-                        localStorage.setItem('cw_user_history_full', JSON.stringify(userHistory));
-                        updateHistoryUI();
-                        showToast("היסטוריה יובאה בהצלחה");
-                    }
-                } catch(err) { showToast("שגיאה בייבוא קובץ ההיסטוריה"); }
-            };
-            reader.readAsText(file);
-        }
-
-        function exportMatrix() {
-            downloadJSON(matrixData, `cw_matrix_config.json`);
-        }
-
-        function importMatrix(e) {
-            const file = e.target.files[0];
-            if(!file) return;
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                try {
-                    const imported = JSON.parse(event.target.result);
-                    matrixData = imported;
-                    localStorage.setItem('cw_custom_matrix_full', JSON.stringify(matrixData));
-                    renderMatrixInput();
-                    showToast("מטריצה עודכנה בהצלחה");
-                } catch(err) { showToast("שגיאה בייבוא המטריצה"); }
-            };
-            reader.readAsText(file);
-        }
-
-        function clearAllData() {
-            if(confirm("מחיקת הנתונים הינה בלתי הפיכה. האם אתה בטוח?")) {
-                localStorage.removeItem('cw_user_history_full');
-                localStorage.removeItem('cw_custom_matrix_full');
-                location.reload();
-            }
-        }
-
-        // --- UTILS ---
-
+        // --- NAVIGATION ---
         function switchTab(tab) {
-            ['input', 'history', 'ai', 'settings'].forEach(t => {
+            ['input', 'ai', 'history'].forEach(t => {
                 document.getElementById(`section-${t}`).classList.add('hidden');
                 document.getElementById(`tab-${t}`).classList.remove('tab-active');
-                document.getElementById(`tab-${t}`).classList.add('text-slate-500');
             });
             document.getElementById(`section-${tab}`).classList.remove('hidden');
             document.getElementById(`tab-${tab}`).classList.add('tab-active');
-            document.getElementById(`tab-${tab}`).classList.remove('text-slate-500');
-            if(tab === 'history') renderRadar();
         }
 
-        function downloadJSON(data, filename) {
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            a.click();
-            URL.revokeObjectURL(url);
+        function saveSession() {
+            const entry = {
+                date: new Date().toISOString(),
+                data: {...currentSession}
+            };
+            history.push(entry);
+            localStorage.setItem('cw_v2_history', JSON.stringify(history));
+            alert("הסשן נשמר במערכת.");
         }
-
-        function showToast(msg) {
-            const t = document.createElement('div');
-            t.className = "fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-8 py-4 rounded-2xl shadow-2xl z-[100] transition-all transform animate-bounce font-bold text-lg text-center whitespace-nowrap";
-            t.innerText = msg;
-            document.body.appendChild(t);
-            setTimeout(() => t.remove(), 3500);
-        }
-
-        window.onload = initApp;
     </script>
 </body>
 </html>
