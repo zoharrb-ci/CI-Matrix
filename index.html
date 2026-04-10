@@ -1,1159 +1,908 @@
-<!DOCTYPE html>
-<html lang="he" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>מטריצת CI וסנכרון - מחקר ותצוגה</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        textMain: '#1a202c',
-                        textMuted: '#718096',
-                        accent: '#4f46e5',
-                        accentDark: '#4338ca',
-                    }
-                }
-            }
-        };
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { 
+  ChevronDown, Info, Clock, Users, Activity, Save, 
+  CheckCircle2, X, HelpCircle, BookOpen, Download, Upload,
+  History, Share2, MessageSquare, ChevronRight, ChevronLeft,
+  FileSpreadsheet, Zap, Target, LayoutGrid, ExternalLink,
+  MessageSquarePlus, Mail, BarChart3, Table, Layers, Camera
+} from 'lucide-react';
 
-        // --- כאן מדביקים את הכתובת החדשה שקיבלת מ-Google Apps Script ---
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzSEcW-MK_PQEtKSiCjLXFQQWLkkCg7ssawsscojic-LQIv2V_Cv-mnGUJqYyJSi5e67w/exec"; 
-        // --------------------------------------------------------
-    </script>
-    <style>
-        html { scroll-behavior: smooth; }
-        body { font-family: system-ui, -apple-system, sans-serif; }
-        
-        .bg-circle {
-            position: absolute;
-            top: -10%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 120vw;
-            height: 120vw;
-            max-width: 1200px;
-            max-height: 1200px;
-            background-color: #f3f4f6;
-            border-radius: 50%;
-            z-index: -1;
-            opacity: 0.6;
+const App = () => {
+  const [lang, setLang] = useState('he');
+  const [helpContent, setHelpContent] = useState(null);
+  const [responses, setResponses] = useState({});
+  const [activeTab, setActiveTab] = useState('mechanics');
+  const [isSaved, setIsSaved] = useState(false);
+  const [history, setHistory] = useState([]);
+  const [viewedIterationIndex, setViewedIterationIndex] = useState(0);
+  const [showMatrixView, setShowMatrixView] = useState(false);
+  const [historyViewMode, setHistoryViewMode] = useState('single');
+  const [showDataMenu, setShowDataMenu] = useState(false);
+  const [showAiModal, setShowAiModal] = useState(false);
+  const [selectedExpert, setSelectedExpert] = useState('general');
+  const [customAIRequest, setCustomAIRequest] = useState('');
+  
+  const fileInputRef = useRef(null); 
+  const dataInputRef = useRef(null); 
+
+  const t = {
+    he: {
+      title: "Contact Ways",
+      subtitle: "מיפוי מיומנויות פיזיות ומנטליות בקונטאקט",
+      about: "אודות הכלי",
+      history: "הצגת נתונים",
+      data: "ניהול נתונים",
+      ai: "ניתוח מומחים (AI)",
+      save: "שמירת איטרציה",
+      saved: "הנתונים נשמרו",
+      viewMatrix: "הצגת נתונים",
+      saveImage: "שמור תמונה",
+      shareApp: "שתף אפליקציה",
+      shareResult: "שתף תוצאה",
+      selectAxis: "בחר ציר משוב",
+      linkCopied: "הקישור לאפליקציה הועתק ללוח!",
+      resultCopied: "התוצאות הועתקו ללוח!",
+      optionalNote: "אין חובה לענות על הכל, אך כל נתון נוסף מדייק את הניתוח.",
+      experts: {
+        general: "ניתוח כללי",
+        steve: "Steve Paxton (התבוננות פנורמית)",
+        nancy: "Nancy Stark Smith (הקציר וה-Underscore)",
+        ray: "Ray Chung (פיזיקה ודינמיקה)",
+        karen: "Karen Nelson (כיוונון סומטי)",
+        daniel: "Daniel Lepkoff (קומפוזיציה ותפקוד)",
+        martin: "Martin Keogh (מטאפורות ופיזיות)",
+        nita: "Nita Little (תקשורת תאית)",
+        kj: "KJ Holmes (אלתור רב-ממדי)",
+        andrew: "Andrew Harwood (טכניקה וביצוע)",
+        julian: "Julian Hamilton (מרחב וזמן)",
+        angela: "Angela Doniy (הקשבה רוסית)"
+      },
+      info: {
+        about: `מערכת Contact Ways נסמכת על שילוב בין מחקר בתחום הסנכרון הלא-מילולי (Nonverbal Synchrony) ותיאוריות של יצירת משמעות משותפת (Participatory Sense-making).\n\nהכלי נועד לתמוך בפיצוח מיומנויות פיזיות, מנטליות ורגשיות בריקוד קונטאקט אימפרוביזציה. ניתן כמובן ליישם את הכלי לאינטראקציות דיאדיות פיזיות נוספות.\n\nהמערכת בנויה ל-3 רמות שימוש:\n1. קריאה כללית של הפרמטרים היוצרת המשגה של חווית הריקוד.\n2. רפלקציה לאחר הריקוד.\n3. מיקוד לריקוד הבא.\n\n**התאמה אישית:** ניתן להתאים את סט השאלות המנחות באופן מלא דרך תפריט "ניהול נתונים", על ידי הורדת הקובץ, עריכתו ב-Google Sheets והעלאתו מחדש.\n\n**על היוצר:**\nזוהר רבינוביץ' - הרפתקן, מכור לאתגרים. היום אני בוחר אותם ברכות ומודה בנימוס לאלה שלא נבחרו. מנחה אילתור וקונטקט משנת 1994. בוגר החוג לתנועה באקדמיה ע"ש רובין בירושלים, לימודי תנועה מתקדמים עם פרופ' עמוס חץ, השתלמתי בגשטלט גוף נפש, הידרותרפיה, חינוך מיוחד, מטפל במגע ובגישה הנוירו התפתחותית תפקודית. ממייסדי הבוגי הירושלמי - חלוץ הריקוד החופשי, קונטק צבע, ג'ם ים ועוד הרפתקאות. הנחתי סדנאות לאורך השנים בפסטיבלים בארץ, בחו"ל, למדתי תנועה באקדמיה בי"ם ובמכללות לרפואה אלטרנטיבית. הפקתי ורקדתי במסגרות פרילנס שונות, עם נמרוד פריד, ענת שמגר, עמוס חץ ואמיר קולבן. כיום מלמד ומטפל בקליניקה הפרטית ומצלם יופי אנושי.\n\nמוזמנים לפנות ליוצר האפליקציה במייל: ZOHARRB@gmail.com`
+      }
+    },
+    en: {
+      title: "Contact Ways",
+      subtitle: "CI Physics & Mental Skill Mapping",
+      about: "About the Tool",
+      history: "View Data",
+      data: "Data Management",
+      ai: "Expert AI Analysis",
+      save: "Save Iteration",
+      saved: "Data Saved",
+      viewMatrix: "View Data",
+      saveImage: "Save Image",
+      shareApp: "Share App",
+      shareResult: "Share Result",
+      selectAxis: "Select Feedback Axis",
+      linkCopied: "App link copied to clipboard!",
+      resultCopied: "Results copied to clipboard!",
+      optionalNote: "No need to answer everything, but each additional detail improves the analysis.",
+      experts: { 
+        general: "General Analysis", steve: "Steve Paxton (Panoramic observation)", nancy: "Nancy Stark Smith (The Underscore)", ray: "Ray Chung (Physics & Dynamics)", 
+        karen: "Karen Nelson (Somatic tuning)", daniel: "Daniel Lepkoff (Composition & Function)", martin: "Martin Keogh (Metaphors & Physicality)", nita: "Nita Little (Cellular communication)",
+        kj: "KJ Holmes (Multidimensional improvisation)", andrew: "Andrew Harwood (Technique & Performance)", julian: "Julian Hamilton (Space & Time)", angela: "Angela Doniy (Russian Listening)"
+      },
+      info: { 
+        about: `The Contact Ways system relies on the combination of Nonverbal Synchrony research and Participatory Sense-making theories.\n\nThe tool is designed to support the decoding of physical, mental, and emotional skills in Contact Improvisation. It can naturally be applied to other physical dyadic interactions.\n\nThe system has 3 levels of use:\n1. General reading of the parameters, creating conceptualization of the dance experience.\n2. Post-dance reflection.\n3. Focusing for the next dance.\n\n**Customization:** You can fully customize the guiding questions via the "Data Management" menu by downloading the file, editing it in Google Sheets, and re-uploading it.\n\n**About the Creator:**\nZohar Rabinovich - Adventurer, addicted to challenges. Today I choose them softly and politely decline the rest. Improvisation and Contact facilitator since 1994. Graduate of the Movement Department at the Rubin Academy in Jerusalem, advanced movement studies with Prof. Amos Hetz, trained in Body-Mind Gestalt, Hydrotherapy, Special Education, touch therapist, and Neuro-Developmental Functional approach. Co-founder of the Jerusalem Boogie - pioneer of free dance, Color Contact, Sea Jam, and other adventures. Facilitated workshops over the years at festivals in Israel and abroad, taught movement at the Academy in Jerusalem and alternative medicine colleges. Produced and danced in various freelance frameworks with Nimrod Fried, Anat Shamgar, Amos Hetz, and Amir Kolben. Currently teaches and treats in a private clinic and photographs human beauty.\n\nYou are welcome to contact the app creator by email: ZOHARRB@gmail.com`
+      }
+    }
+  };
+
+  const cur = t[lang];
+
+  const defaultMatrix = {
+    mechanics: {
+      title: lang === 'he' ? "מכניקה ותנועה" : "Mechanics & Movement",
+      params: [
+        { 
+          id: 'zeitgeber', 
+          label: lang === 'he' ? 'איזון הובלה' : 'Zeitgeber Balance', 
+          labels: lang === 'he' ? ['עקיבה פסיבית', 'סינכרוניות', 'הובלה נוקשה'] : ['Passive Following', 'Synchrony', 'Rigid Lead'],
+          info: {
+            desc: lang === 'he' ? "הדינמיקה בין הובלה (Leading) לעקיבה (Following)." : "The dynamics between leading and following.",
+            under: lang === 'he' ? "עקיבה פסיבית מוחלטת ללא מתן אינפורמציה חזרה לפרטנר." : "Absolute passive following with zero feedback to the partner.",
+            flow: lang === 'he' ? "חילופין נזילים וספונטניים בין הובלה למובלות עד למצב של 'סינכרוניות טהורה'." : "Fluid, spontaneous exchange between leading and following into pure synchrony.",
+            over: lang === 'he' ? "הובלה מתמדת נוקשה, ללא יכולת להקשיב לדחפי הפרטנר." : "Constant rigid leading, unable to listen to the partner's impulses."
+          }
+        },
+        { 
+          id: 'stability', 
+          label: lang === 'he' ? 'יציבות הסנכרון' : 'Sync Stability', 
+          labels: lang === 'he' ? ['סנכרון מקרי', 'סנכרון דינמי', 'סנכרון נוקשה'] : ['Accidental Sync', 'Dynamic Sync', 'Rigid Sync'],
+          info: {
+            desc: lang === 'he' ? "איכות השמירה על התיאום לאורך זמן." : "The quality of maintaining coordination over time.",
+            under: lang === 'he' ? "סנכרון מקרי, קצר וקטוע. קפיצה מתמדת בין רעיונות ללא מיצוי." : "Accidental, short, and fragmented sync. Constant jumping between ideas without exhausting them.",
+            flow: lang === 'he' ? "סנכרון יציב אך דינמי, המאפשר כניסה ויציאה מתואמת מתבניות תנועה." : "Stable yet dynamic sync, allowing coordinated entry and exit from movement patterns.",
+            over: lang === 'he' ? "סנכרון נוקשה (Rigid) שקשה לצאת ממנו או לשנות אותו; חזרתיות כפייתית." : "Rigid sync that is hard to break or change; compulsive repetitiveness."
+          }
+        },
+        { 
+          id: 'weight', 
+          label: lang === 'he' ? 'העברת משקל' : 'Weight Transfer', 
+          labels: lang === 'he' ? ['הימנעות/קלילות', 'חלוקה/תמיכה', 'קריסה/כובד'] : ['Avoidance/Light', 'Sharing/Support', 'Collapse/Heavy'],
+          info: {
+            desc: lang === 'he' ? "האופן בו אנו חולקים ונושאים משקל עם הפרטנר." : "How we share and bear weight with the partner.",
+            under: lang === 'he' ? "הימנעות ממתן משקל, החזקה עצמית מוגזמת או פחד ממשקל." : "Avoidance of giving weight, excessive self-holding, or fear of weight.",
+            flow: lang === 'he' ? "שיתוף משקל הדדי, חי ומאפשר המשך תנועה." : "Mutual weight sharing, alive and enabling continued movement.",
+            over: lang === 'he' ? "הפלת המשקל (קריסה) באופן שהפרטנר אינו יכול לשאת בבטחה." : "Dumping weight (collapse) so the partner cannot safely bear it."
+          }
+        },
+        { 
+          id: 'tonus', 
+          label: lang === 'he' ? 'ויסות טונס שרירי' : 'Tonus Regulation', 
+          labels: lang === 'he' ? ['רפיון/קריסה', 'גמיש ורספונסיבי', 'נוקשות/התנגדות'] : ['Floppy/Collapse', 'Responsive', 'Rigid/Resistance'],
+          info: {
+            desc: lang === 'he' ? "התאמת מתח השרירים לדינמיקת הריקוד." : "Adjusting muscle tone to the dance dynamics.",
+            under: lang === 'he' ? "גוף רפוי מדי שלא מעניק תמיכה (Collapse)." : "Overly floppy body providing no support (Collapse).",
+            flow: lang === 'he' ? "טונס אדפטיבי המגיב לשינויי משקל ומהירות." : "Adaptive tone responding to weight and speed changes.",
+            over: lang === 'he' ? "גוף נוקשה ומוחזק החוסם זרימה תנועתית (Bracing)." : "Rigid, held body blocking movement flow (Bracing)."
+          }
+        },
+        { 
+          id: 'space', 
+          label: lang === 'he' ? 'התמצאות במרחב' : 'Spatial Orientation', 
+          labels: lang === 'he' ? ['אובדן כיוון/סגור', 'ניווט משותף', 'השתלטות/קיבוע'] : ['Disoriented/Closed', 'Shared Nav', 'Dominating/Fixed'],
+          info: {
+            desc: lang === 'he' ? "התמצאות פיזית במרחב הריקוד ובקשר לרצפה ולפרטנר." : "Physical orientation in the dance space, relative to floor and partner.",
+            under: lang === 'he' ? "התעלמות מהמרחב, אובדן כיוון או תנועה 'סגורה' מדי." : "Ignoring space, losing direction, or overly 'closed' movement.",
+            flow: lang === 'he' ? "ניווט תלת-ממדי חופשי וסינרגטי יחד עם הפרטנר." : "Free, synergistic 3D navigation with the partner.",
+            over: lang === 'he' ? "קיבוע במרחב או השתלטות אגרסיבית על הכיוון במרחב המשותף." : "Fixation or aggressive domination of direction in the shared space."
+          }
+        },
+        { 
+          id: 'fall', 
+          label: lang === 'he' ? 'דינמיקת נפילה' : 'Falling Dynamics', 
+          labels: lang === 'he' ? ['עצירה/פחד', 'כוח מניע גמיש', 'נפילה מסוכנת'] : ['Stop/Fear', 'Flexible Momentum', 'Dangerous Fall'],
+          info: {
+            desc: lang === 'he' ? "היכולת לעבוד עם כוח הכבידה והנפילה בריקוד." : "The ability to work with gravity and falling in the dance.",
+            under: lang === 'he' ? "פחד מנפילה, בלימה עצמית ועצירת הזרימה." : "Fear of falling, self-braking, and stopping the flow.",
+            flow: lang === 'he' ? "נפילה ככוח מניע וגמיש, שימוש בנפילה להמשך תנועה." : "Falling as a flexible driving force, using it to continue movement.",
+            over: lang === 'he' ? "נפילה חסרת שליטה, קריסה פתאומית ומסוכנת." : "Uncontrolled falling, sudden and dangerous collapse."
+          }
         }
-
-        @keyframes slideUpFade {
-            from { opacity: 0; transform: translate(-50%, 20px); }
-            to { opacity: 1; transform: translate(-50%, 0); }
+      ]
+    },
+    presence: {
+      title: lang === 'he' ? "נוכחות רגשית" : "Emotional Presence",
+      params: [
+        { 
+          id: 'repair', 
+          label: lang === 'he' ? 'חוסן ותיקון' : 'Rupture & Repair', 
+          labels: lang === 'he' ? ['קפיאה/עצירה', 'התארגנות מחדש', 'תפיסה כוחנית'] : ['Freeze/Stop', 'Reorganize', 'Forced Grip'],
+          info: {
+            desc: lang === 'he' ? "היכולת להתאושש מאיבוד מגע או 'טעות' בריקוד." : "Ability to recover from loss of contact or 'mistakes'.",
+            under: lang === 'he' ? "איבוד מגע מוביל לקפיאה, מבוכה או עצירה מוחלטת של הריקוד." : "Loss of contact leads to freezing, embarrassment, or full stop.",
+            flow: lang === 'he' ? "'שבירת' התיאום נתפסת כהזדמנות ליצירת משמעות חדשה והתארגנות משותפת." : "'Breaking' coordination is seen as an opportunity for new meaning and joint reorganization.",
+            over: lang === 'he' ? "ניסיון כוחני או לחוץ 'לתפוס' מחדש את הפרטנר מבלי להקשיב למצבו." : "Forced or stressed attempt to 're-grab' the partner without listening."
+          }
+        },
+        { 
+          id: 'resonance', 
+          label: lang === 'he' ? 'תהודה רגשית' : 'Affective Resonance', 
+          labels: lang === 'he' ? ['מכני/מנותק', 'טווח הזהב', 'הצפה/הזדהות'] : ['Mechanical/Detached', 'Goldilocks Zone', 'Flooding/Merged'],
+          info: {
+            desc: lang === 'he' ? "הדהוד רגשי הדדי המאפשר אמפתיה וחיבור עמוק." : "Mutual emotional mirroring allowing empathy and deep connection.",
+            under: lang === 'he' ? "תנועה מכנית, קרה ומנותקת מהחוויה הרגשית של המפגש." : "Mechanical, cold movement detached from the emotional experience.",
+            flow: lang === 'he' ? "נוכחות ב'טווח הזהב' - חיבור רגשי גמיש המאפשר אמפתיה מבלי לאבד את המרכז העצמי." : "Presence in the 'Goldilocks Zone' - flexible emotional connection allowing empathy without losing self-center.",
+            over: lang === 'he' ? "הזדהות יתר או הצפה רגשית (Enmeshment) שפוגעת ביכולת לשמור על בטיחות פיזית." : "Over-identification or emotional flooding (Enmeshment) compromising physical safety."
+          }
+        },
+        { 
+          id: 'mindfulness', 
+          label: lang === 'he' ? 'קשיבות גופנית' : 'Somatic Mindfulness', 
+          labels: lang === 'he' ? ['חוסר מודעות', 'קשב פתוח', 'התעסקות יתר'] : ['Unaware', 'Open Monitoring', 'Over-fixation'],
+          info: {
+            desc: lang === 'he' ? "מודעות למנח הגוף, לצרכים הפיזיים ולגירויים פנימיים וחיצוניים." : "Awareness of body posture, physical needs, and internal/external stimuli.",
+            under: lang === 'he' ? "חוסר מודעות למנח הגוף או לצרכים הפיזיים ברגע נתון." : "Lack of awareness of body posture or physical needs at a given moment.",
+            flow: lang === 'he' ? "קשב פתוח (Open Monitoring) המאפשר תגובה ספונטנית לגירויים." : "Open Monitoring allowing spontaneous response to stimuli.",
+            over: lang === 'he' ? "התעסקות יתר ב'נכונות' התנועה או בטכניקה על חשבון הקשר." : "Over-fixation on the 'correctness' of movement or technique over connection."
+          }
+        },
+        { 
+          id: 'vulnerability', 
+          label: lang === 'he' ? 'פגיעות פתוחה' : 'Open Vulnerability', 
+          labels: lang === 'he' ? ['הסתרה/ניתוק', 'אותנטיות', 'חשיפת יתר'] : ['Hiding/Detached', 'Authentic', 'Over-exposed'],
+          info: {
+            desc: lang === 'he' ? "המוכנות להיראות ולהיות חשוף בקשר." : "Willingness to be seen and vulnerable in the connection.",
+            under: lang === 'he' ? "חומות הגנה, הסתרה של רגשות ומאמץ להיראות 'בסדר'." : "Defensive walls, hiding emotions, and effort to look 'okay'.",
+            flow: lang === 'he' ? "אותנטיות רגשית וכנות בתוך התנועה." : "Emotional authenticity and honesty within the movement.",
+            over: lang === 'he' ? "חשיפת יתר או דרמטיזציה של החוויה." : "Over-exposure or dramatization of the experience."
+          }
         }
-        .toast-animate { animation: slideUpFade 0.4s ease forwards; }
-
-        @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+      ]
+    },
+    timeline: {
+      title: lang === 'he' ? "זמן" : "Time",
+      params: [
+        { 
+          id: 'entry', 
+          label: lang === 'he' ? 'גישוש והזמנה' : 'Entry & Invitation', 
+          labels: lang === 'he' ? ['היסוס/הימנעות', 'הצעה עדינה', 'פלישה/כפייה'] : ['Hesitation/Avoid', 'Gentle Invite', 'Invasion/Force'],
+          info: {
+            desc: lang === 'he' ? "איכות תחילת המגע והכניסה לריקוד." : "Quality of initiating contact and entering the dance.",
+            under: lang === 'he' ? "היסוס רב, הימנעות מיצירת קשר ברור או ציפייה פסיבית." : "Extreme hesitation, avoiding clear contact, or passive expectation.",
+            flow: lang === 'he' ? "הצעת מגע עדינה וברורה המאפשרת בחירה לפרטנר." : "Gentle, clear contact proposal allowing choice for the partner.",
+            over: lang === 'he' ? "התפרצות פנימה, פלישה למרחב ללא בדיקת מוכנות." : "Bursting in, invading space without checking readiness."
+          }
+        },
+        { 
+          id: 'core', 
+          label: lang === 'he' ? 'העמקה ושיא' : 'Core Flow', 
+          labels: lang === 'he' ? ['שטחיות/הימנעות', 'נוכחות מלאה', 'אובדן שליטה'] : ['Superficial/Avoid', 'Full Presence', 'Loss of Control'],
+          info: {
+            desc: lang === 'he' ? "מרכז הריקוד והיכולת לשהות באינטנסיביות או במורכבות." : "The core of the dance and ability to stay in intensity or complexity.",
+            under: lang === 'he' ? "הישארות בחיבור שטחי ומוכר, פחד להעמיק לתוך משקל או רגש." : "Staying in a superficial, familiar connection; fear of deepening weight or emotion.",
+            flow: lang === 'he' ? "חיבור מלא, תחושת 'אנחנו נרקדים' מתוך אמון ומשקל משותף." : "Full connection, feeling 'we are danced' through trust and shared weight.",
+            over: lang === 'he' ? "הצפה חושית או רגשית המובילה לאובדן הקשבה ושליטה." : "Sensory or emotional overload leading to a loss of listening and control."
+          }
+        },
+        { 
+          id: 'exit', 
+          label: lang === 'he' ? 'פרידה ושחרור' : 'Exit & Closing', 
+          labels: lang === 'he' ? ['ניתוק פתאומי', 'סיום הדרגתי', 'היצמדות/קושי'] : ['Abrupt Cut', 'Gradual Close', 'Clinging/Hard'],
+          info: {
+            desc: lang === 'he' ? "הדרך בה הריקוד מסתיים והקשר הפיזי מתנתק." : "How the dance ends and physical contact breaks.",
+            under: lang === 'he' ? "ניתוק פתאומי, חסר הכרה או מבוהל." : "Abrupt, unacknowledged, or startled disconnection.",
+            flow: lang === 'he' ? "פרידה הדרגתית המכבדת את המפגש ומשאירה מקום לעיכול." : "Gradual closing that respects the encounter and leaves room for processing.",
+            over: lang === 'he' ? "קושי לשחרר, היצמדות מעבר לצורך או למרחב של הפרטנר." : "Difficulty letting go, clinging beyond necessity or the partner's space."
+          }
         }
-        .popover-animate { animation: fadeInDown 0.2s ease forwards; }
-
-        .spinner { animation: spin 1s linear infinite; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-
-        .chart-container {
-            position: relative;
-            width: 100%;
-            height: 350px;
-        }
-        @media (min-width: 1024px) {
-            .chart-container { height: 450px; }
-            
-            /* שומר על מיקום הסליידרים בצד שמאל בגרסה האנגלית (LTR) */
-            html[dir="ltr"] #sliders-main-container { order: -1; }
-        }
-
-        input[type=range] {
-            accent-color: #4f46e5;
-            -webkit-appearance: none;
-            background: #e2e8f0;
-            height: 6px;
-            border-radius: 5px;
-            outline: none;
-            position: relative;
-            z-index: 20;
-        }
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: #4f46e5;
-            cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            transition: transform 0.1s;
-        }
-        input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
-
-        .accordion-content {
-            display: grid;
-            grid-template-rows: 0fr;
-            transition: grid-template-rows 0.3s ease-out;
-        }
-        .accordion-content > div { overflow: hidden; }
-        .accordion-content.open { grid-template-rows: 1fr; }
-        .chevron { transition: transform 0.3s ease; }
-        .accordion-button[aria-expanded="true"] .chevron { transform: rotate(180deg); }
-
-        /* LTR adjustments for English without modifying Tailwind classes directly in HTML */
-        html[dir="ltr"] .text-right { text-align: left !important; }
-        html[dir="ltr"] .text-left { text-align: right !important; }
-        html[dir="ltr"] .rounded-l-xl { border-radius: 0 0.75rem 0.75rem 0 !important; }
-        html[dir="ltr"] .border-r-4 { border-right-width: 0 !important; border-left-width: 4px !important; }
-        html[dir="ltr"] .pr-10 { padding-right: 0 !important; padding-left: 2.5rem !important; }
-        html[dir="ltr"] .pr-2 { padding-right: 0 !important; padding-left: 0.5rem !important; }
-        html[dir="ltr"] .pl-1 { padding-left: 0 !important; padding-right: 0.25rem !important; }
-        html[dir="ltr"] .pr-1 { padding-right: 0 !important; padding-left: 0.25rem !important; }
-        html[dir="ltr"] .mr-8 { margin-right: 0 !important; margin-left: -2rem !important; }
-        html[dir="ltr"] .left-0 { left: auto !important; right: 0 !important; }
-    </style>
-</head>
-<body class="text-textMain relative overflow-x-hidden bg-slate-50 min-h-screen flex flex-col">
-    <div class="bg-circle"></div>
-
-    <button id="btnScrollContact" type="button" class="absolute top-4 left-4 lg:top-8 lg:left-8 z-50 bg-white/90 p-3 rounded-full shadow-md text-indigo-600 hover:bg-indigo-50 hover:scale-105 transition-all border border-indigo-100 cursor-pointer" title="צור קשר">
-        <svg class="w-6 h-6 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-    </button>
-
-    <button id="btnFloatingHelp" class="fixed bottom-6 right-6 z-[60] bg-indigo-600 text-white p-4 rounded-full shadow-lg hover:bg-indigo-700 hover:scale-105 transition-all flex items-center justify-center" title="איך משתמשים?">
-        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-    </button>
-
-    <header class="text-center pt-12 pb-6 px-4 w-full max-w-4xl mx-auto relative z-10">
-        
-        <div class="flex justify-center items-center gap-3 mb-6 flex-wrap">
-            <button id="btnTopHelp" class="inline-flex items-center gap-2 bg-indigo-100 text-indigo-700 px-5 py-2 rounded-full font-medium hover:bg-indigo-200 transition-colors shadow-sm text-sm border border-indigo-200">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <span data-i18n="topHelp">הסבר מורחב: איך משתמשים במטריצה?</span>
-            </button>
-            <!-- כפתור שינוי שפה -->
-            <button id="btnLangToggle" onclick="toggleLang()" class="bg-white text-indigo-700 px-4 py-2 rounded-full font-bold hover:bg-indigo-50 transition-colors shadow-sm text-sm border border-indigo-200 w-14">
-                EN
-            </button>
-        </div>
-
-        <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-4 text-indigo-900 tracking-tight">CONTACT IMPROVISATION</h1>
-        <p class="text-lg text-textMuted max-w-2xl mx-auto mb-6" data-i18n="subtitle">
-            מפת פרמטרים לחקירת תנועה, מגע, וסנכרון רגשי. כווננו את המחוונים כדי לנתח את הריקוד שלכם.
-        </p>
-
-        <div class="flex justify-center mb-8 relative z-20">
-            <div class="bg-indigo-200/50 p-1.5 rounded-2xl inline-flex shadow-inner border border-indigo-100 flex-wrap justify-center gap-1">
-                <button id="btnModeMovement" class="px-6 py-2.5 rounded-xl font-bold transition-all bg-white text-indigo-800 shadow-sm text-sm md:text-base" data-i18n="btnMovement">מטריצה פיזית-תנועתית</button>
-                <button id="btnModeEmotional" class="px-6 py-2.5 rounded-xl font-bold transition-all text-indigo-600/80 hover:text-indigo-800 text-sm md:text-base" data-i18n="btnEmotional">מטריצת סנכרון רגשי</button>
-            </div>
-        </div>
-    </header>
-
-    <main class="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start flex-grow relative z-10 pb-20">
-        
-        <div id="radar-container" class="fixed top-1/4 left-1/2 -translate-x-1/2 w-[120%] max-w-lg z-0 opacity-25 pointer-events-none lg:opacity-100 lg:pointer-events-auto lg:static lg:translate-x-0 lg:w-full lg:max-w-none lg:sticky lg:top-6 lg:flex lg:flex-col lg:gap-6 transition-all duration-300">
-            <div class="bg-transparent lg:bg-white p-0 lg:p-6 rounded-3xl lg:shadow-xl lg:border border-gray-100 flex flex-col items-center">
-                <h2 class="text-2xl font-semibold mb-2 text-center text-indigo-800 hidden lg:block" id="radarTitle" data-i18n="radarTitleMove">מטריצה פיזית-תנועתית</h2>
-                <div class="chart-container w-full">
-                    <canvas id="radarChart"></canvas>
-                </div>
-                
-                <div class="mt-8 w-full bg-gradient-to-br from-indigo-50 to-purple-50 p-5 rounded-2xl border border-purple-100 shadow-sm hidden lg:block relative overflow-visible">
-                    <div class="absolute top-0 right-0 w-16 h-16 bg-purple-200 rounded-full blur-2xl opacity-50 -mr-8 -mt-8 pointer-events-none"></div>
-                    
-                    <div class="flex items-center justify-between mb-3 info-trigger-container relative z-20">
-                        <h3 class="font-bold text-indigo-900 flex items-center gap-2 m-0">
-                            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
-                            <span data-i18n="aiHeader">מורה AI ושמירת נתונים</span>
-                        </h3>
-                        <button class="text-purple-500 hover:text-purple-700 bg-purple-100/80 rounded-full p-1.5 border border-purple-200 toggle-popover-btn shrink-0 transition-colors" title="מידע">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </button>
-                        <div class="info-popover hidden absolute top-full mt-2 left-0 z-50 w-72 bg-white border border-purple-200 shadow-xl rounded-2xl p-4 text-sm text-slate-700 popover-animate">
-                            <strong class="block text-purple-800 mb-1 text-base" data-i18n="aiTooltipTitle">איך זה עובד?</strong>
-                            <span data-i18n="aiTooltipDesc">רשמו בקשה למשוב או שאלה (למשל: "איך אוכל לשפר את ההקשבה שלי?").<br><br>המערכת תכין עבורכם פקודה מוכנה מראש עם כל נתוני המיפוי שלכם. לאחר לחיצה על הכפתור, ייפתח חלון של Gemini - כל שעליכם לעשות הוא פשוט <b>להדביק (Paste)</b> את הטקסט בחלון השיחה!</span>
-                        </div>
-                    </div>
-
-                    <textarea id="aiQuestionDesktop" data-i18n="aiPlaceholder" class="w-full px-3 py-2 text-sm border border-purple-200 rounded-xl focus:ring-2 focus:ring-purple-400 outline-none bg-white/90 transition-all resize-none mb-3 relative z-10" rows="1" placeholder="בקשו משוב ממורה ה-AI..."></textarea>
-                    
-                    <button class="w-full mb-3 bg-purple-600 text-white text-sm font-medium px-4 py-2 rounded-xl hover:bg-purple-700 transition-colors shadow-sm relative z-10" onclick="copyPrompt('aiQuestionDesktop')">
-                        <span data-i18n="btnCopyPrompt">העתק פרומפט ל-Gemini</span>
-                    </button>
-
-                    <div class="grid grid-cols-2 gap-2 mb-3 relative z-10">
-                        <input type="text" id="userNameDesk" data-i18n="phName" placeholder="שם/כינוי (אופציונלי)" class="w-full text-xs px-2.5 py-2 border border-purple-200/60 rounded-lg outline-none bg-white/90 focus:ring-1 focus:ring-purple-400">
-                        <input type="email" id="userEmailDesk" data-i18n="phEmail" placeholder="מייל (אופציונלי)" class="w-full text-xs px-2.5 py-2 border border-purple-200/60 rounded-lg outline-none bg-white/90 focus:ring-1 focus:ring-purple-400">
-                        <input type="text" id="userLocDesk" data-i18n="phLoc" placeholder="מיקום (אופציונלי)" class="w-full text-xs px-2.5 py-2 border border-purple-200/60 rounded-lg outline-none bg-white/90 focus:ring-1 focus:ring-purple-400 col-span-2">
-                    </div>
-                    
-                    <div class="flex gap-2 relative z-10">
-                        <button class="flex-1 bg-emerald-600 text-white text-sm font-medium px-2 py-2.5 rounded-xl hover:bg-emerald-700 flex items-center justify-center gap-1 shadow-sm whitespace-nowrap border border-emerald-500" id="btnSaveCloudDesktop" onclick="sendDataToSheet(this, 'Desk')">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path></svg>
-                            <span class="btn-text" data-i18n="btnSaveCloud">שמור לענן</span>
-                        </button>
-                        <button class="flex-1 bg-white text-slate-700 border border-slate-200 text-sm font-medium px-2 py-2.5 rounded-xl hover:bg-slate-50 flex items-center justify-center gap-1 shadow-sm whitespace-nowrap" onclick="downloadExport()">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                            <span class="btn-text" data-i18n="btnExportTxt">קובץ TXT</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <button id="btnScrollDeepDive1" class="hidden lg:flex group items-center justify-center gap-3 w-full bg-white border-2 border-accentDark/30 text-textMain hover:border-accentDark hover:bg-accent/10 px-8 py-4 rounded-2xl font-medium transition-all shadow-md hover:shadow-lg text-lg">
-                <span data-i18n="btnScrollDeepDive">קפוץ להסבר המורחב</span>
-                <svg class="w-6 h-6 text-accentDark group-hover:translate-y-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
-            </button>
-        </div>
-
-        <div id="sliders-main-container" class="bg-white/70 lg:bg-white p-5 md:p-8 rounded-3xl shadow-xl border border-white/50 lg:border-gray-100 h-auto lg:h-[820px] overflow-y-auto custom-scrollbar relative z-10 mt-2 lg:mt-0">
-            <h2 class="text-2xl font-semibold mb-6 text-indigo-800 border-b border-indigo-200/50 pb-3 sticky top-0 bg-white/90 lg:bg-white z-30 px-2 rounded-t-lg" data-i18n="slidersHeader">הצירים והפרמטרים</h2>
-            
-            <div id="sliders-container" class="space-y-10 pr-2 pb-6"></div>
-
-            <div class="lg:hidden flex flex-col gap-4 mt-8">
-                <div class="w-full bg-gradient-to-br from-indigo-50 to-purple-50 p-4 rounded-2xl border border-purple-100 shadow-sm relative overflow-visible mb-2">
-                    <div class="flex items-center justify-between mb-3 info-trigger-container relative z-20">
-                        <h3 class="font-bold text-indigo-900 flex items-center gap-2 m-0 text-lg">
-                            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
-                            <span data-i18n="aiHeader">מורה AI ושמירת נתונים</span>
-                        </h3>
-                        <button class="text-purple-500 hover:text-purple-700 bg-purple-100/80 rounded-full p-1.5 border border-purple-200 toggle-popover-btn shrink-0 transition-colors" title="מידע">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </button>
-                        <div class="info-popover hidden absolute bottom-full mb-2 left-0 z-50 w-64 bg-white border border-purple-200 shadow-xl rounded-2xl p-4 text-sm text-slate-700 popover-animate">
-                            <strong class="block text-purple-800 mb-1 text-base" data-i18n="aiTooltipTitle">איך זה עובד?</strong>
-                            <span data-i18n="aiTooltipDesc">רשמו בקשה למשוב או שאלה.<br><br>המערכת תכין עבורכם פרומפט עם נתוני המיפוי. לאחר מכן ייפתח חלון של Gemini - פשוט עשו <b>הדבק (Paste)</b> בחלון השיחה!</span>
-                        </div>
-                    </div>
-
-                    <textarea id="aiQuestionMobileMain" data-i18n="aiPlaceholder" class="w-full px-3 py-2 text-sm border border-purple-200 rounded-xl focus:ring-2 focus:ring-purple-400 outline-none bg-white/90 transition-all resize-none mb-3 relative z-10" rows="1" placeholder="בקשו משוב ממורה ה-AI..."></textarea>
-                    
-                    <button class="w-full mb-3 bg-purple-600 text-white font-medium px-4 py-2 rounded-xl text-sm relative z-10" onclick="copyPrompt('aiQuestionMobileMain')">
-                        <span data-i18n="btnCopyPrompt">העתק פרומפט</span>
-                    </button>
-                    
-                    <div class="grid grid-cols-2 gap-2 mb-3 relative z-10">
-                        <input type="text" id="userNameMob" data-i18n="phName" placeholder="שם/כינוי (אופציונלי)" class="w-full text-xs px-2.5 py-2 border border-purple-200/60 rounded-lg outline-none bg-white/90 focus:ring-1 focus:ring-purple-400">
-                        <input type="email" id="userEmailMob" data-i18n="phEmail" placeholder="מייל (אופציונלי)" class="w-full text-xs px-2.5 py-2 border border-purple-200/60 rounded-lg outline-none bg-white/90 focus:ring-1 focus:ring-purple-400">
-                        <input type="text" id="userLocMob" data-i18n="phLoc" placeholder="מיקום (אופציונלי)" class="w-full text-xs px-2.5 py-2 border border-purple-200/60 rounded-lg outline-none bg-white/90 focus:ring-1 focus:ring-purple-400 col-span-2">
-                    </div>
-                    
-                    <div class="flex gap-2 relative z-10 flex-row">
-                        <button class="flex-1 bg-emerald-600 text-white border border-emerald-500 font-medium px-2 py-2.5 rounded-xl text-sm flex justify-center items-center gap-1" id="btnSaveCloudMobile" onclick="sendDataToSheet(this, 'Mob')">
-                            <span class="btn-text" data-i18n="btnSaveCloud">שמור לענן</span>
-                        </button>
-                        <button class="flex-1 bg-white text-slate-700 border border-slate-200 font-medium px-2 py-2.5 rounded-xl text-sm" onclick="downloadExport()">
-                            <span class="btn-text" data-i18n="btnExportTxt">קובץ TXT</span>
-                        </button>
-                    </div>
-                </div>
-
-                <button id="btnOpenMapPopup" class="flex items-center justify-center gap-3 w-full bg-indigo-600 text-white hover:bg-indigo-700 px-6 py-3.5 rounded-2xl font-medium shadow-md text-base">
-                    <span data-i18n="btnOpenMap">הצג מפת תנועה מוגדלת</span>
-                </button>
-            </div>
-        </div>
-    </main>
-
-    <!-- מודל ההסבר הכללי -->
-    <div id="helpModal" class="fixed inset-0 bg-slate-900/60 z-[150] hidden opacity-0 transition-opacity duration-300 flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-2xl max-h-[90vh] rounded-3xl shadow-2xl flex flex-col transform scale-95 transition-transform duration-300">
-            <div class="flex justify-between items-center p-5 md:p-6 border-b border-slate-100">
-                <h2 class="text-xl md:text-2xl font-bold text-indigo-900 flex items-center gap-2" data-i18n="helpModalTitle">
-                    מטריצת סנכרון תנועתי ורגשי (גרסה מורחבת)
-                </h2>
-                <button onclick="closeHelpModal()" class="text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-full p-2 transition-colors shrink-0">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
-            <div class="p-5 md:p-6 overflow-y-auto flex-grow text-slate-700 space-y-5">
-                <p class="font-semibold text-indigo-700" data-i18n="helpModalSubtitle">כלי להערכת ברית טיפולית גופנית ודינמיקה בין-אישית בתנועה</p>
-                <p class="text-base leading-relaxed" data-i18n="helpModalIntro">
-                    מסמך זה מציג מטריצה להערכת איכות המפגש התנועתי, המבוססת על שילוב בין מחקר מדעי על סנכרון לא-מילולי (Nonverbal Synchrony) לבין תהליכי יצירת משמעות משותפת (Participatory Sense-making). הכלי נועד לאפיין את הדינמיקה בין רוקדים או בין מטפל למטופל על פני רצף של תגובתיות.
-                </p>
-                <div class="space-y-4 mt-6">
-                    <h3 class="font-bold text-lg text-slate-800 mb-2 border-b pb-2" data-i18n="helpModalOverview">סיכום איכויות התגובה (Matrix Overview)</h3>
-                    
-                    <div class="bg-red-50 border-r-4 border-red-400 p-4 rounded-l-xl">
-                        <h3 class="font-bold text-red-800 text-lg flex items-center gap-2 mb-1"><span class="w-3 h-3 rounded-full bg-red-500"></span><span data-i18n="helpModalUnderTitle">1. תגובה מכנית/חסרה (Under)</span></h3>
-                        <p class="text-red-900/80 text-sm" data-i18n="helpModalUnderDesc">חוויה של ניתוק, פסיביות, היעדר יוזמה. חוסר בטחון במרחב המשותף.</p>
-                    </div>
-                    <div class="bg-emerald-50 border-r-4 border-emerald-400 p-4 rounded-l-xl">
-                        <h3 class="font-bold text-emerald-800 text-lg flex items-center gap-2 mb-1"><span class="w-3 h-3 rounded-full bg-emerald-500"></span><span data-i18n="helpModalFlowTitle">2. תגובה אינטגרטיבית (Flow)</span></h3>
-                        <p class="text-emerald-900/80 text-sm" data-i18n="helpModalFlowDesc">דיאלוג נזיל, גמישות ויכולת טרנספורמציה. שאלת רפלקציה מוצעת: "באיזה שלב של המפגש הרגשנו הכי מסונכרנים, ומה איפשר לנו לעבור מגישוש להעמקה?"</p>
-                    </div>
-                    <div class="bg-orange-50 border-r-4 border-orange-400 p-4 rounded-l-xl">
-                        <h3 class="font-bold text-orange-800 text-lg flex items-center gap-2 mb-1"><span class="w-3 h-3 rounded-full bg-orange-500"></span><span data-i18n="helpModalOverTitle">3. תגובת יתר (Over)</span></h3>
-                        <p class="text-orange-900/80 text-sm" data-i18n="helpModalOverDesc">תגובה כוחנית/עודפת: שתלטנות, נוקשות, חוסר הקשבה לגבולות.</p>
-                    </div>
-                </div>
-
-                <div class="mt-8 space-y-4">
-                    <h3 class="font-bold text-lg text-slate-800 mb-2 border-b pb-2" data-i18n="helpGuideTitle">הנחיות לשימוש באפליקציה</h3>
-                    <div class="flex gap-4 items-start">
-                        <div class="bg-indigo-100 text-indigo-700 font-bold rounded-full w-7 h-7 flex items-center justify-center shrink-0 mt-0.5 text-sm">1</div>
-                        <div><strong class="block text-slate-900 text-sm" data-i18n="helpGuide1Title">בחירת מטריצה ומילוי</strong><span data-i18n="helpGuide1Desc">בחרו מטריצה למעלה וכווננו את המחוונים לפי התחושה שלכם. הנתונים נשמרים כשעוברים בין המטריצות.</span></div>
-                    </div>
-                    <div class="flex gap-4 items-start">
-                        <div class="bg-indigo-100 text-indigo-700 font-bold rounded-full w-7 h-7 flex items-center justify-center shrink-0 mt-0.5 text-sm">2</div>
-                        <div><strong class="block text-slate-900 text-sm" data-i18n="helpGuide2Title">הסברים מורחבים</strong><span data-i18n="helpGuide2Desc">לחצו על סמלי המידע (i) ליד כל ציר או פרמטר כדי לקרוא את ההגדרות המלאות מתוך המסמך המקורי.</span></div>
-                    </div>
-                    <div class="flex gap-4 items-start">
-                        <div class="bg-indigo-100 text-indigo-700 font-bold rounded-full w-7 h-7 flex items-center justify-center shrink-0 mt-0.5 text-sm">3</div>
-                        <div><strong class="block text-slate-900 text-sm" data-i18n="helpGuide3Title">שמירה לענן / ייצוא</strong><span data-i18n="helpGuide3Desc">הזינו פרטים אישיים (אופציונלי) ושמרו את המיפוי שלכם ישירות לגיליון האקסל, או הורידו כקובץ טקסט למחשב.</span></div>
-                    </div>
-                    <div class="flex gap-4 items-start">
-                        <div class="bg-indigo-100 text-indigo-700 font-bold rounded-full w-7 h-7 flex items-center justify-center shrink-0 mt-0.5 text-sm">4</div>
-                        <div><strong class="block text-slate-900 text-sm" data-i18n="helpGuide4Title">התייעצות עם מורה AI</strong><span data-i18n="helpGuide4Desc">המערכת אוספת את כל הנתונים שלכם ומייצרת פרומפט מוכן. כל מה שנשאר הוא לעשות הדבק (Paste) ב-Gemini.</span></div>
-                    </div>
-                </div>
-            </div>
-            <div class="p-4 border-t border-slate-100 bg-slate-50 rounded-b-3xl flex justify-end">
-                <button onclick="closeHelpModal()" class="w-full sm:w-auto bg-indigo-600 text-white font-medium px-6 py-2.5 rounded-xl hover:bg-indigo-700 transition-colors shadow-sm" data-i18n="btnUnderstand">
-                    הבנתי, בואו נתחיל!
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- מודל מידע מורחב ספציפי לפרמטר/ציר -->
-    <div id="infoModal" class="fixed inset-0 bg-slate-900/40 z-[160] hidden opacity-0 transition-opacity duration-300 flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-md max-h-[80vh] rounded-3xl shadow-2xl flex flex-col transform scale-95 transition-transform duration-300">
-            <div class="flex justify-between items-start p-5 border-b border-indigo-100 bg-indigo-50/50 rounded-t-3xl">
-                <h3 class="text-xl font-bold text-indigo-900 pr-2" id="infoModalTitle"></h3>
-                <button onclick="closeInfoModal()" class="text-slate-400 hover:text-slate-700 bg-white shadow-sm hover:bg-slate-50 rounded-full p-2 transition-colors shrink-0">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
-            <div class="p-5 overflow-y-auto text-slate-700 text-base leading-relaxed" id="infoModalDesc"></div>
-            <div class="p-4 border-t border-slate-100 bg-slate-50 rounded-b-3xl flex justify-end">
-                <button onclick="closeInfoModal()" class="bg-indigo-100 text-indigo-800 font-medium px-5 py-2 rounded-xl hover:bg-indigo-200 transition-colors" data-i18n="btnCloseInfo">סגור</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Map Popup (רדאר מוגדל לנייד) -->
-    <div id="mapPopupModal" class="fixed inset-0 bg-slate-900/60 z-[100] hidden opacity-0 transition-opacity duration-300 flex items-center justify-center md:p-4">
-        <div class="bg-white w-full h-[100dvh] md:h-auto md:max-w-md md:rounded-3xl rounded-none shadow-2xl p-4 md:p-6 relative transform scale-95 transition-transform duration-300 flex flex-col items-center overflow-y-auto" id="mapPopupContent">
-            <button id="btnCloseMapPopupTop" class="absolute top-4 text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-full p-2 transition-colors z-10" style="left: 1rem;">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
-            <h2 class="text-2xl font-bold mb-4 text-indigo-800 text-center w-full border-b pb-4" id="modalRadarTitle" data-i18n="modalRadarTitle">מפת התנועה שלך</h2>
-            <div class="chart-container w-full h-[40vh] md:h-[300px] mb-4 flex-grow min-h-[250px]">
-                <canvas id="modalRadarChart"></canvas>
-            </div>
-            <button id="btnCloseMapPopupBottom" class="w-full mt-auto bg-slate-100 text-slate-700 font-medium px-4 py-3 rounded-xl hover:bg-slate-200 border border-slate-200" data-i18n="btnBackToSliders">חזור לסליידרים</button>
-        </div>
-    </div>
-
-    <div id="copyToast" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-purple-900 text-white px-8 py-6 rounded-3xl shadow-2xl z-[200] flex flex-col items-center text-center gap-4 hidden max-w-sm w-[90%] toast-animate">
-        <p class="font-bold text-2xl text-white" data-i18n="copyToastTitle">הפרומפט הועתק!</p>
-        <p class="text-purple-200 text-sm" data-i18n="copyToastDesc">עברו ל-Gemini ועשו הדבק (Paste).</p>
-    </div>
-
-    <div id="cloudToast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-emerald-800 text-white px-6 py-4 rounded-2xl shadow-xl z-[200] flex items-center gap-3 hidden toast-animate">
-        <svg class="w-6 h-6 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-        <span class="font-medium" id="cloudToastMsg" data-i18n="cloudToastMsg">הנתונים נשמרו בהצלחה בגליליון!</span>
-    </div>
-
-    <!-- Deep Dive Section -->
-    <section id="deep-dive-section" class="py-16 px-4 w-full max-w-4xl mx-auto border-t border-black/10 mt-16 relative z-10 text-right text-start-logical">
-        <div class="text-center mb-12">
-            <h2 class="text-3xl md:text-4xl font-extrabold mb-4 text-indigo-900" id="deepDiveMainTitle" data-i18n="deepDiveMainTitle">המטריצה: חקירה מעמיקה</h2>
-            <p class="text-textMuted text-lg" data-i18n="deepDiveMainSubtitle">גללו למטה לחקירה של הממדים השונים.</p>
-        </div>
-        <div id="deepDiveMovement" class="space-y-4 block"></div>
-        <div id="deepDiveEmotional" class="space-y-4 hidden"></div>
-    </section>
-
-    <!-- פוטר -->
-    <footer id="contact" class="bg-slate-900 text-slate-300 py-16 px-4 text-center mt-auto relative z-10 border-t-4 border-indigo-600">
-        <div class="max-w-2xl mx-auto">
-            <h2 class="text-3xl font-bold text-white mb-2" data-i18n="contactTitle">צור קשר</h2>
-            <p class="text-slate-400 mb-6" data-i18n="contactDesc">לשאלות, סדנאות והזמנות לפעילות</p>
-            <p class="font-bold text-white text-xl mb-2">Zohar Rabinovich</p>
-            <a href="mailto:zoharrb@gmail.com" class="text-indigo-400 block mb-2" dir="ltr">zoharrb@gmail.com</a>
-        </div>
-    </footer>
-
-    <script>
-        // --- Translations ---
-        const translations = {
-            he: {
-                topHelp: "הסבר מורחב: איך משתמשים במטריצה?",
-                subtitle: "מפת פרמטרים לחקירת תנועה, מגע, וסנכרון רגשי. כווננו את המחוונים כדי לנתח את הריקוד שלכם.",
-                btnMovement: "מטריצה פיזית-תנועתית",
-                btnEmotional: "מטריצת סנכרון רגשי",
-                radarTitleMove: "מטריצה פיזית-תנועתית",
-                radarTitleEmo: "מטריצת סנכרון רגשי",
-                modalRadarTitle: "מפת התנועה שלך",
-                aiHeader: "מורה AI ושמירת נתונים",
-                aiTooltipTitle: "איך זה עובד?",
-                aiTooltipDesc: "רשמו בקשה למשוב או שאלה (למשל: \"איך אוכל לשפר את ההקשבה שלי?\").<br><br>המערכת תכין עבורכם פקודה מוכנה מראש עם כל נתוני המיפוי שלכם. לאחר לחיצה על הכפתור, ייפתח חלון של Gemini - כל שעליכם לעשות הוא פשוט <b>להדביק (Paste)</b> את הטקסט בחלון השיחה!",
-                aiPlaceholder: "בקשו משוב ממורה ה-AI...",
-                btnCopyPrompt: "העתק פרומפט ל-Gemini",
-                phName: "שם/כינוי (אופציונלי)",
-                phEmail: "מייל (אופציונלי)",
-                phLoc: "מיקום (אופציונלי)",
-                btnSaveCloud: "שמור לענן",
-                btnExportTxt: "קובץ TXT",
-                slidersHeader: "הצירים והפרמטרים",
-                btnOpenMap: "הצג מפת תנועה מוגדלת",
-                btnScrollDeepDive: "קפוץ להסבר המורחב",
-                deepDiveMainTitle: "המטריצה: חקירה מעמיקה",
-                deepDiveMainSubtitle: "גללו למטה לחקירה של הממדים השונים.",
-                contactTitle: "צור קשר",
-                contactDesc: "לשאלות, סדנאות והזמנות לפעילות",
-                helpModalTitle: "מטריצת סנכרון תנועתי ורגשי (גרסה מורחבת)",
-                helpModalSubtitle: "כלי להערכת ברית טיפולית גופנית ודינמיקה בין-אישית בתנועה",
-                helpModalIntro: "מסמך זה מציג מטריצה להערכת איכות המפגש התנועתי, המבוססת על שילוב בין מחקר מדעי על סנכרון לא-מילולי (Nonverbal Synchrony) לבין תהליכי יצירת משמעות משותפת (Participatory Sense-making). הכלי נועד לאפיין את הדינמיקה בין רוקדים או בין מטפל למטופל על פני רצף של תגובתיות.",
-                helpModalOverview: "סיכום איכויות התגובה (Matrix Overview)",
-                helpModalUnderTitle: "1. תגובה מכנית/חסרה (Under)",
-                helpModalUnderDesc: "חוויה של ניתוק, פסיביות, היעדר יוזמה. חוסר בטחון במרחב המשותף.",
-                helpModalFlowTitle: "2. תגובה אינטגרטיבית (Flow)",
-                helpModalFlowDesc: "דיאלוג נזיל, גמישות ויכולת טרנספורמציה. שאלת רפלקציה מוצעת: \"באיזה שלב של המפגש הרגשנו הכי מסונכרנים, ומה איפשר לנו לעבור מגישוש להעמקה?\"",
-                helpModalOverTitle: "3. תגובת יתר (Over)",
-                helpModalOverDesc: "תגובה כוחנית/עודפת: שתלטנות, נוקשות, חוסר הקשבה לגבולות.",
-                helpGuideTitle: "הנחיות לשימוש באפליקציה",
-                helpGuide1Title: "בחירת מטריצה ומילוי",
-                helpGuide1Desc: "בחרו מטריצה למעלה וכווננו את המחוונים לפי התחושה שלכם. הנתונים נשמרים כשעוברים בין המטריצות.",
-                helpGuide2Title: "הסברים מורחבים",
-                helpGuide2Desc: "לחצו על סמלי המידע (i) ליד כל ציר או פרמטר כדי לקרוא את ההגדרות המלאות מתוך המסמך המקורי.",
-                helpGuide3Title: "שמירה לענן / ייצוא",
-                helpGuide3Desc: "הזינו פרטים אישיים (אופציונלי) ושמרו את המיפוי שלכם ישירות לגיליון האקסל, או הורידו כקובץ טקסט למחשב.",
-                helpGuide4Title: "התייעצות עם מורה AI",
-                helpGuide4Desc: "המערכת אוספת את כל הנתונים שלכם ומייצרת פרומפט מוכן. כל מה שנשאר הוא לעשות הדבק (Paste) ב-Gemini.",
-                btnUnderstand: "הבנתי, בואו נתחיל!",
-                btnCloseInfo: "סגור",
-                btnBackToSliders: "חזור לסליידרים",
-                copyToastTitle: "הפרומפט הועתק!",
-                copyToastDesc: "עברו ל-Gemini ועשו הדבק (Paste).",
-                cloudToastMsg: "הנתונים נשמרו בהצלחה בגליליון!",
-                promptGreeting: "אני מנתח ריקוד קונטקט אימפרוביזציה בעזרת",
-                promptValues: "הערכים שלי (0 עד 100) הם:",
-                promptStateUnder: "תת-תגובה (חסר)",
-                promptStateFlow: "מאוזן/זרימה",
-                promptStateOver: "תגובת יתר (עודף)",
-                promptQuestion: "שאלתי אליך כמורה לריקוד ו-AI:",
-                promptDefaultQ: "מה דעתך על הפרופיל הזה ועל מה כדאי לי לעבוד?",
-                exportTitle: "דוח מטריצת קונטקט אימפרוביזציה",
-                exportDate: "תאריך"
-            },
-            en: {
-                topHelp: "Extended Guide: How to use?",
-                subtitle: "Parameters map for exploring movement, touch, and emotional synchrony. Adjust the sliders to analyze your dance.",
-                btnMovement: "Physical-Movement Matrix",
-                btnEmotional: "Emotional Synchrony Matrix",
-                radarTitleMove: "Physical-Movement Matrix",
-                radarTitleEmo: "Emotional Synchrony Matrix",
-                modalRadarTitle: "Your Movement Map",
-                aiHeader: "AI Teacher & Data Saving",
-                aiTooltipTitle: "How does it work?",
-                aiTooltipDesc: "Write a request for feedback or a question (e.g., \"How can I improve my listening?\").<br><br>The system will prepare a ready-made prompt with all your mapping data. After clicking the button, a Gemini window will open - all you have to do is <b>Paste</b> the text into the chat window!",
-                aiPlaceholder: "Ask the AI teacher for feedback...",
-                btnCopyPrompt: "Copy Prompt to Gemini",
-                phName: "Name/Nickname (Optional)",
-                phEmail: "Email (Optional)",
-                phLoc: "Location (Optional)",
-                btnSaveCloud: "Save to Cloud",
-                btnExportTxt: "TXT File",
-                slidersHeader: "Axes and Parameters",
-                btnOpenMap: "Show Enlarged Map",
-                btnScrollDeepDive: "Jump to Extended Guide",
-                deepDiveMainTitle: "The Matrix: Deep Dive",
-                deepDiveMainSubtitle: "Scroll down to explore the different dimensions.",
-                contactTitle: "Contact Us",
-                contactDesc: "For questions, workshops, and bookings",
-                helpModalTitle: "Movement & Emotional Synchrony Matrix (Extended)",
-                helpModalSubtitle: "A tool for evaluating physical therapeutic alliance and interpersonal dynamics in movement",
-                helpModalIntro: "This document presents a matrix for evaluating the quality of movement encounters, based on combining scientific research on Nonverbal Synchrony with processes of Participatory Sense-making. The tool is designed to characterize the dynamics between dancers or therapist/client across a spectrum of responsiveness.",
-                helpModalOverview: "Matrix Overview: Response Qualities",
-                helpModalUnderTitle: "1. Mechanical/Missing Response (Under)",
-                helpModalUnderDesc: "Experience of disconnection, passivity, lack of initiative. Lack of confidence in the shared space.",
-                helpModalFlowTitle: "2. Integrative Response (Flow)",
-                helpModalFlowDesc: "Fluid dialogue, flexibility, and transformation ability. Suggested reflection: \"At what stage did we feel most synchronized, and what allowed us to move from probing to deepening?\"",
-                helpModalOverTitle: "3. Over-Response (Over)",
-                helpModalOverDesc: "Forceful/excessive response: dominance, rigidity, lack of listening to boundaries.",
-                helpGuideTitle: "App Usage Guidelines",
-                helpGuide1Title: "Selecting Matrix & Filling",
-                helpGuide1Desc: "Select a matrix above and adjust the sliders according to your experience. Data is saved when switching.",
-                helpGuide2Title: "Extended Explanations",
-                helpGuide2Desc: "Click the info icons (i) next to each axis or parameter to read the full definitions.",
-                helpGuide3Title: "Cloud Saving / Export",
-                helpGuide3Desc: "Enter personal details (optional) and save your mapping directly to the spreadsheet, or download as TXT.",
-                helpGuide4Title: "Consulting the AI Teacher",
-                helpGuide4Desc: "The system collects all your data and generates a ready prompt. Just Paste it in Gemini.",
-                btnUnderstand: "Got it, let's start!",
-                btnCloseInfo: "Close",
-                btnBackToSliders: "Back to Sliders",
-                copyToastTitle: "Prompt Copied!",
-                copyToastDesc: "Go to Gemini and Paste.",
-                cloudToastMsg: "Data saved successfully to the sheet!",
-                promptGreeting: "I am analyzing a Contact Improvisation dance using the",
-                promptValues: "My values (0 to 100) are:",
-                promptStateUnder: "Under-response (Missing)",
-                promptStateFlow: "Balanced/Flow",
-                promptStateOver: "Over-response (Excess)",
-                promptQuestion: "My question to you as an AI dance teacher:",
-                promptDefaultQ: "What do you think about this profile and what should I work on?",
-                exportTitle: "Contact Improvisation Matrix Report",
-                exportDate: "Date"
-            }
-        };
-
-        const axesDataMovement_he = [
-            {
-                title: "1. פיזיקה ומכניקה של הגוף",
-                desc: "ציר זה בוחן כיצד אנו מתמודדים עם כוחות פיזיקליים, שימוש בכבידה, וניהול המשקל שלנו אל מול הפרטנר והרצפה.",
-                params: [
-                    { id: 0, name: "העברת משקל", under: "הימנעות", balanced: "חלוקה", over: "קריסה/הישענות יתר", desc: "האופן בו אנו חולקים משקל עם הפרטנר. <br><br><b>הימנעות (חסר):</b> פחד מלתת משקל, החזקה עצמית מוגזמת.<br><b>חלוקה (מאוזן):</b> שיתוף משקל הדדי ומאפשר.<br><b>קריסה (עודף):</b> הפלת המשקל באופן שהפרטנר אינו יכול לשאת בבטחה." },
-                    { id: 1, name: "ניהול מומנטום", under: "עצירת זרימה", balanced: "רכיבה טבעית", over: "מהירות לא מבוקרת", desc: "היכולת 'לרכוב' על האנרגיה הקינטית של הריקוד.<br><br><b>עצירה (חסר):</b> בלימה מתמדת של התנועה הטבעית.<br><b>רכיבה (מאוזן):</b> ניתוב המומנטום באופן זורם והמשכי.<br><b>לא מבוקרת (עודף):</b> מהירות המייצרת סכנה או חוסר יכולת להקשיב." },
-                    { id: 2, name: "כוח הכבידה", under: "נוקשות/התנגדות", balanced: "שימוש יעיל", over: "כניעה כבדה", desc: "מערכת היחסים עם הרצפה ועם משקל הגוף.<br><br><b>התנגדות (חסר):</b> גוף מוחזק המסרב להתקרקע.<br><b>שימוש יעיל (מאוזן):</b> ניצול הכבידה ליצירת תנועה ללא מאמץ.<br><b>כניעה (עודף):</b> כבדות ההופכת לנטל על הפרטנר במקום עוגן." },
-                    { id: 3, name: "חיכוך והחלקה", under: "היצמדות סטטית", balanced: "מעברים חלקים", over: "החלקה לא יציבה", desc: "איכות נקודת המפגש במעברים ותנועה.<br><br><b>היצמדות (חסר):</b> חוסר יכולת לגלגל את נקודת המגע (תקיעות).<br><b>מעברים (מאוזן):</b> גלגול והחלקה נעימים ומאפשרים המשכיות.<br><b>החלקה (עודף):</b> אובדן אחיזה מהיר מדי שמוביל לאי יציבות." }
-                ]
-            },
-            {
-                title: "2. מגע וחיבור",
-                desc: "ציר זה מתמקד באיכות הדיאלוג הפיזי: הקשבה דרך העור והשרירים, נוכחות נקודת המגע והרציפות שלה.",
-                params: [
-                    { id: 4, name: "נקודת מגע משותפת", under: "שטחית/רופפת", balanced: "ברורה ונושמת", over: "לופתת/חודרנית", desc: "איכות אזור החיבור הפיזי בין בני הזוג.<br><br><b>שטחית (חסר):</b> מגע שאינו מזמין תקשורת עמוקה.<br><b>ברורה (מאוזן):</b> מגע קשוב ונוכח, המשמש כדיאלוג תנועתי.<br><b>לופתת (עודף):</b> מגע אוחז, צובט או חודר למרחב האישי באופן לא נעים." },
-                    { id: 5, name: "הקשבה גופנית", under: "חירשות תנועתית", balanced: "תגובה מיידית", over: "תגובתיות יתר", desc: "זיהוי כוונות הפרטנר דרך הגוף ללא מילים.<br><br><b>חירשות (חסר):</b> חוסר תשומת לב לשינויים בפרטנר.<br><b>תגובה מיידית (מאוזן):</b> התאמה זורמת וטבעית לתנועה המשותפת.<br><b>תגובתיות יתר (עודף):</b> קפיציות, חרדה מכל תזוזה קטנה, פרשנות יתר." },
-                    { id: 6, name: "טונוס שריר", under: "רפוי מדי", balanced: "מותאם ומשתנה", over: "נוקשה/דרוך", desc: "רמת המתח בשרירים במהלך הריקוד.<br><br><b>רפוי (חסר):</b> גוף 'ספגטי', קשה להובלה ואינו תומך בעצמו.<br><b>מותאם (מאוזן):</b> טונוס המשתנה בהתאם לצורך (קשה כשתומך, רך כשנשען).<br><b>נוקשה (עודף):</b> החזקה שרירית שלא מאפשרת זרימה והקשבה." },
-                    { id: 7, name: "רציפות המגע", under: "ניתוקים תכופים", balanced: "נוכחות מתמשכת", over: "הידבקות מאולצת", desc: "השמירה על החיבור התודעתי והפיזי.<br><br><b>ניתוקים (חסר):</b> עזיבה תכופה ללא סיבה המייצרת חוסר ביטחון.<br><b>נוכחות (מאוזן):</b> קשר רציף (גם כשאין מגע פיזי, יש קשר עין/כוונה).<br><b>הידבקות (עודף):</b> סירוב לייצר חלל או אוויר בריקוד כשהוא נדרש." }
-                ]
-            },
-            {
-                title: "3. מרחב וזמן",
-                desc: "ציר זה בוחן כיצד בני הזוג מנווטים את הריקוד בחלל הסטודיו, הסנכרון הקצבי שלהם, ושימוש ברבדי הגובה השונים.",
-                params: [
-                    { id: 8, name: "מהירות וקצב", under: "איטיות מעכבת", balanced: "משחק מקצבים", over: "תזזיתיות/חיפזון", desc: "הסנכרון ויכולת ההתאמה לקצב משותף.<br><br><b>איטיות (חסר):</b> קצב שלא מאפשר לריקוד להתפתח ו'תוקע' את האנרגיה.<br><b>משחק מקצבים (מאוזן):</b> גיוון טבעי והתאמה הדדית של מהירויות.<br><b>תזזיתיות (עודף):</b> מהירות מופרזת המבטלת את יכולת ההקשבה והנוכחות." },
-                    { id: 9, name: "מודעות למרחב", under: "ראיית מנהרה", balanced: "360 מעלות", over: "התפזרות", desc: "ההתמצאות בחלל ויחס לרוקדים אחרים.<br><br><b>ראיית מנהרה (חסר):</b> ריכוז רק בפרטנר תוך התעלמות מוחלטת מהסביבה וסיכון בהתנגשויות.<br><b>360 מעלות (מאוזן):</b> מודעות פריפריאלית לסביבה ולפרטנר גם יחד.<br><b>התפזרות (עודף):</b> תשומת לב שבורחת לסביבה ומאבדת את החיבור לפרטנר." },
-                    { id: 10, name: "שינויי גבהים", under: "הישארות במישור אחד", balanced: "תנועה כדורית", over: "נפילות/קפיצות חדות", desc: "השימוש במישורים (רצפה, עמידה, הרמות).<br><br><b>הישארות (חסר):</b> תקיעות על הרצפה או בעמידה בלבד.<br><b>תנועה כדורית (מאוזן):</b> מעברים טבעיים ועגולים בין כל הגבהים.<br><b>נפילות/קפיצות (עודף):</b> שינויי גובה פתאומיים שאינם בטיחותיים או מחוברים לקרקע." }
-                ]
-            },
-            {
-                title: "4. כוריאוגרפיה וזרימה",
-                desc: "ציר זה מתייחס למבנה הריקוד שנוצר 'כאן ועכשיו': היצירתיות, חלוקת התפקידים (מי מוביל?), ואיך הריקוד מסתיים.",
-                params: [
-                    { id: 11, name: "יצירתיות ואלתור", under: "תבניות חזרתיות", balanced: "הפתעה וחופש", over: "כאוס תנועתי", desc: "רמת הגיוון התנועתי והיכולת לצאת מאזורי נוחות.<br><br><b>חזרתיות (חסר):</b> היצמדות למה שמוכר, תחושת שעמום או רוטינה.<br><b>הפתעה (מאוזן):</b> גילוי משותף של תנועות חדשות מתוך חופש והקשבה.<br><b>כאוס (עודף):</b> ניסיון להיות 'מקורי' בכוח שמייצר בלבול ונתק." },
-                    { id: 12, name: "הובלה והוויה", under: "פסיביות", balanced: "חלוקת תפקידים", over: "שליטה בלעדית", desc: "איזון בין היוזם (המוביל) לנענה (המובל).<br><br><b>פסיביות (חסר):</b> חוסר יוזמה מוחלט, להפוך ל'שק תפוחי אדמה'.<br><b>חלוקת תפקידים (מאוזן):</b> ריקוד שבו ההובלה עוברת בטבעיות בין השניים.<br><b>שליטה (עודף):</b> ניסיון לכפות מהלכים על הפרטנר ולהכתיב את הריקוד." },
-                    { id: 13, name: "סיומים ופרידות", under: "נטישה פתאומית", balanced: "פירוק הדרגתי", over: "משיכת זמן מאולצת", desc: "האופן שבו הריקוד בא אל קיצו.<br><br><b>נטישה (חסר):</b> עזיבה חדה וקרה ללא הכנה.<br><b>פירוק הדרגתי (מאוזן):</b> סיום שמורגש ומוסכם על שני הצדדים, לעיתים בהאטה טבעית.<br><b>משיכת זמן (עודף):</b> קושי לשחרר גם כשהאנרגיה המשותפת כבר הסתיימה." }
-                ]
-            }
-        ];
-
-        const axesDataEmotional_he = [
-            {
-                title: "1. ציר הנוכחות והתודעה (Attunement & Presence)",
-                desc: "התשתית המנטלית והרגשית למפגש והיכולת לווסת את הקשר.",
-                params: [
-                    { id: 0, name: "חוסן ותיקון (Rupture & Repair)", under: "קפיאה/מבוכה", balanced: "התארגנות משותפת", over: "ניסיון כוחני 'לתקן'", desc: "<b>תת-תגובה (Under):</b> איבוד מגע מוביל לקפיאה, מבוכה או עצירה מוחלטת של הריקוד. קושי להתאושש מ'טעות'.<br><br><b>תגובה אינטגרטיבית (Flow):</b> 'שבירה' נתפסת כהזדמנות ליצירת משמעות חדשה והתארגנות משותפת.<br><br><b>תגובת יתר (Over):</b> ניסיון כוחני או לחוץ 'לתפוס' מחדש את הפרטנר באופן מיידי ללא הקשבה למצבו." },
-                    { id: 1, name: "תהודה רגשית (Affective Resonance)", under: "תנועה מכנית/מנותקת", balanced: "טווח הזהב/אמפתיה", over: "הצפה רגשית", desc: "<b>תת-תגובה (Under):</b> תנועה מכנית קרה ומנותקת. אין השפעה הדדית.<br><br><b>תגובה אינטגרטיבית (Flow):</b> נוכחות ב'טווח הזהב' (Goldilocks Zone) - חיבור גמיש המאפשר אמפתיה ללא איבוד המרכז.<br><br><b>תגובת יתר (Over):</b> הזדהות יתר או הצפה רגשית (Enmeshment) שפוגעת ביכולת התגובה." },
-                    { id: 2, name: "נוכחות חברתית (Social Presence)", under: "תחושת נפרדות חזקה", balanced: "השלישי המשותף", over: "ביטול העצמי", desc: "<b>תת-תגובה (Under):</b> תחושת נפרדות חזקה ('רקידה ליד'). סנכרון טכני בלבד.<br><br><b>תגובה אינטגרטיבית (Flow):</b> חוויה של 'השלישי המשותף' - הריקוד כישות שגדולה מסכום חלקיה.<br><br><b>תגובת יתר (Over):</b> ביטול העצמי לטובת היחד; טשטוש גבולות וביטוי אישי." }
-                ]
-            },
-            {
-                title: "2. ציר המכניקה והתקשורת (Mechanics & Interaction)",
-                desc: "הביטוי הפיזי של הסנכרון, איכות התנועה והובלת המקצב.",
-                params: [
-                    { id: 3, name: "איזון הובלה (Zeitgeber Balance)", under: "עקיבה פסיבית מוחלטת", balanced: "חילופין נזילים", over: "הובלה מתמדת ונוקשה", desc: "<b>תת-תגובה (Under):</b> עקיבה פסיבית מוחלטת (Pacing) ללא מתן אינפורמציה חזרה.<br><br><b>תגובה אינטגרטיבית (Flow):</b> חילופין נזילים וספונטניים בין הובלה למובלות; 'סינכרוניות טהורה'.<br><br><b>תגובת יתר (Over):</b> הובלה מתמדת ונוקשה (Leading) ללא יכולת להקשיב לדחפי הפרטנר." },
-                    { id: 4, name: "יציבות הסנכרון (Stability)", under: "סנכרון מקרי וקטוע", balanced: "יציב אך דינמי", over: "חזרתיות כפייתית", desc: "<b>תת-תגובה (Under):</b> סנכרון מקרי וקטוע. קפיצה בין רעיונות ללא מיצוי.<br><br><b>תגובה אינטגרטיבית (Flow):</b> סנכרון יציב אך דינמי; כניסה ויציאה מתואמת מתבניות תנועה.<br><br><b>תגובת יתר (Over):</b> סנכרון נוקשה (Rigid) וחזרתיות כפייתית על תבנית קבועה." },
-                    { id: 5, name: "אינטגרציה רב-מודאלית (Multimodal)", under: "ניתוק בין רמות", balanced: "תיאום עמוק", over: "חיקוי מאולץ", desc: "<b>תת-תגובה (Under):</b> ניתוק בין רמות (למשל: תנועה מהירה עם נשימה עצורה או מבט בוהה).<br><br><b>תגובה אינטגרטיבית (Flow):</b> תיאום עמוק (Attunement) שבו נשימה, מקצב ותנועה מהדהדים זה את זה.<br><br><b>תגובת יתר (Over):</b> ניסיון לחקות (Mimicry) את הפרטנר בצורה סינתטית ומאולצת." }
-                ]
-            },
-            {
-                title: "3. ציר הזמן והתפתחות (Chronological Evolution)",
-                desc: "התפתחות הריקוד כתהליך נרטיבי של קרבה ובניית משמעות.",
-                params: [
-                    { id: 6, name: "גישוש והזמנה", under: "הימנעות מהצעה", balanced: "הצעות עדינות", over: "פלישה מהירה", desc: "<b>תת-תגובה (Under):</b> הימנעות מהצעה ברורה; המתנה פסיבית ליוזמת הפרטנר.<br><br><b>תגובה אינטגרטיבית (Flow):</b> הצעות עדינות המשאירות מקום לפרטנר לבחור את אופן ההיענות.<br><br><b>תגובת יתר (Over):</b> פלישה מהירה למרחב האישי; כפיית מגע ללא סימני מוכנות." },
-                    { id: 7, name: "היכרות וחיפוש כיוון", under: "קושי במציאת 'שפה'", balanced: "הקשבה דרוכה", over: "אילוץ סגנון", desc: "<b>תת-תגובה (Under):</b> קושי למצוא 'שפה משותפת'; כל אחד רוקד בסגנון אחר ללא ניסיון גישור.<br><br><b>תגובה אינטגרטיבית (Flow):</b> תקופת 'אי-ודאות יצירתית'; הקשבה דרוכה למקצב המשותף שמתחיל להיווצר.<br><br><b>תגובת יתר (Over):</b> ניסיון לאלץ סגנון מסוים; חוסר סבלנות לתהליך החיפוש." },
-                    { id: 8, name: "העמקה (Core Flow)", under: "היתקעות ברמה שטחית", balanced: "אנחנו נרקדים", over: "איבוד העצמי/הצפה", desc: "<b>תת-תגובה (Under):</b> היתקעות ברמה שטחית; חזרתיות על תנועות מוכרות מבלי להסתכן בחיבור עמוק.<br><br><b>תגובה אינטגרטיבית (Flow):</b> זרימה מלאה (Flow); תחושת 'אנחנו נרקדים' מתוך אמון, משקל משותף ושימוש ב'טעויות'.<br><br><b>תגובת יתר (Over):</b> איבוד העצמי בתוך האינטנסיביות; 'הצפה' חושית או רגשית שמובילה לאובדן שליטה." },
-                    { id: 9, name: "סיום ופרידה", under: "ניתוק פתאומי/מבוהל", balanced: "פרידה הדרגתית", over: "סחיטת זמן", desc: "<b>תת-תגובה (Under):</b> ניתוק פתאומי ומבוהל; חוסר יכולת לסמן שהריקוד נגמר באופן שמכבד את הקשר.<br><br><b>תגובה אינטגרטיבית (Flow):</b> פרידה הדרגתית (Decelerando); הכרה בחוויה המשותפת והשארת 'טעם של עוד'.<br><br><b>תגובת יתר (Over):</b> קושי לשחרר; 'סחיטה' של הזמן מעבר ליכולת ההכלה של הפרטנר או של המרחב." }
-                ]
-            }
-        ];
-
-        const axesDataMovement_en = [
-            {
-                title: "1. Physics & Body Mechanics",
-                desc: "This axis examines how we deal with physical forces, use of gravity, and weight management against the partner and the floor.",
-                params: [
-                    { id: 0, name: "Weight Transfer", under: "Avoidance", balanced: "Sharing", over: "Collapsing", desc: "How we share weight with the partner. <br><br><b>Avoidance (Under):</b> Fear of giving weight, excessive self-holding.<br><b>Sharing (Flow):</b> Mutual and enabling weight sharing.<br><b>Collapsing (Over):</b> Dropping weight in a way the partner cannot safely support." },
-                    { id: 1, name: "Momentum", under: "Stopping flow", balanced: "Natural riding", over: "Uncontrolled speed", desc: "The ability to 'ride' the kinetic energy of the dance.<br><br><b>Stopping flow (Under):</b> Constant braking of natural movement.<br><b>Natural riding (Flow):</b> Routing momentum fluidly and continuously.<br><b>Uncontrolled speed (Over):</b> Speed that creates danger or inability to listen." },
-                    { id: 2, name: "Gravity", under: "Rigidity/Resistance", balanced: "Efficient use", over: "Heavy surrender", desc: "The relationship with the floor and body weight.<br><br><b>Resistance (Under):</b> A held body that refuses to ground.<br><b>Efficient use (Flow):</b> Utilizing gravity to create effortless movement.<br><b>Heavy surrender (Over):</b> Heaviness that becomes a burden on the partner instead of an anchor." },
-                    { id: 3, name: "Friction & Sliding", under: "Static adhesion", balanced: "Smooth transitions", over: "Unstable sliding", desc: "The quality of the meeting point in transitions and movement.<br><br><b>Adhesion (Under):</b> Inability to roll the point of contact (stuckness).<br><b>Transitions (Flow):</b> Rolling and sliding that allow continuity.<br><b>Unstable sliding (Over):</b> Losing grip too quickly leading to instability." }
-                ]
-            },
-            {
-                title: "2. Touch & Connection",
-                desc: "This axis focuses on the quality of the physical dialogue: listening through skin and muscles, presence of the contact point, and its continuity.",
-                params: [
-                    { id: 4, name: "Point of Contact", under: "Superficial/Loose", balanced: "Clear & Breathing", over: "Gripping/Intrusive", desc: "The quality of the physical connection area.<br><br><b>Superficial (Under):</b> Touch that doesn't invite deep communication.<br><b>Clear (Flow):</b> Attentive and present touch, used as a movement dialogue.<br><b>Gripping (Over):</b> Holding, pinching, or unpleasantly intruding personal space." },
-                    { id: 5, name: "Physical Listening", under: "Movement deafness", balanced: "Immediate response", over: "Over-reactivity", desc: "Identifying the partner's intentions through the body without words.<br><br><b>Deafness (Under):</b> Lack of attention to changes in the partner.<br><b>Immediate response (Flow):</b> Fluid and natural adaptation to shared movement.<br><b>Over-reactivity (Over):</b> Jumpiness, anxiety from every small movement, over-interpretation." },
-                    { id: 6, name: "Muscle Tone", under: "Too loose", balanced: "Adaptive", over: "Rigid/Tense", desc: "The level of tension in the muscles during the dance.<br><br><b>Too loose (Under):</b> 'Spaghetti' body, hard to lead and unsupported.<br><b>Adaptive (Flow):</b> Tone that changes according to need (firm when supporting, soft when leaning).<br><b>Rigid (Over):</b> Muscular holding that prevents flow and listening." },
-                    { id: 7, name: "Continuity of Touch", under: "Frequent breaks", balanced: "Continuous presence", over: "Forced clinging", desc: "Maintaining the conscious and physical connection.<br><br><b>Frequent breaks (Under):</b> Frequent leaving without reason, creating insecurity.<br><b>Continuous presence (Flow):</b> Continuous connection (even when there's no physical touch, there's eye/intention contact).<br><b>Forced clinging (Over):</b> Refusal to create space or air in the dance when needed." }
-                ]
-            },
-            {
-                title: "3. Space & Time",
-                desc: "This axis examines how partners navigate the dance in the studio space, their rhythmic synchronization, and the use of different height levels.",
-                params: [
-                    { id: 8, name: "Pacing & Speed", under: "Delaying slowness", balanced: "Play of paces", over: "Hasty/Frantic", desc: "Synchronization and adaptability to a shared pace.<br><br><b>Delaying (Under):</b> A pace that prevents the dance from developing and 'stucks' the energy.<br><b>Play of paces (Flow):</b> Natural variety and mutual adaptation of speeds.<br><b>Hasty (Over):</b> Excessive speed that eliminates the ability to listen and be present." },
-                    { id: 9, name: "Spatial Awareness", under: "Tunnel vision", balanced: "360 degrees", over: "Scattered", desc: "Orientation in space and attitude towards other dancers.<br><br><b>Tunnel vision (Under):</b> Focusing only on the partner while completely ignoring the surroundings.<br><b>360 degrees (Flow):</b> Peripheral awareness of both the environment and the partner.<br><b>Scattered (Over):</b> Attention that escapes to the environment and loses connection to the partner." },
-                    { id: 10, name: "Level Changes", under: "Staying on one plane", balanced: "Spherical movement", over: "Sharp falls/jumps", desc: "The use of planes (floor, standing, lifts).<br><br><b>Staying (Under):</b> Stuckness only on the floor or only standing.<br><b>Spherical movement (Flow):</b> Natural and round transitions between all heights.<br><b>Sharp falls/jumps (Over):</b> Sudden height changes that are unsafe or unconnected to the ground." }
-                ]
-            },
-            {
-                title: "4. Choreography & Flow",
-                desc: "This axis refers to the structure of the dance created 'here and now': creativity, role division (who leads?), and how the dance ends.",
-                params: [
-                    { id: 11, name: "Creativity & Improv", under: "Repetitive patterns", balanced: "Surprise & Freedom", over: "Movement chaos", desc: "The level of movement variety and ability to step out of comfort zones.<br><br><b>Repetitive (Under):</b> Clinging to the familiar, feeling of boredom or routine.<br><b>Surprise (Flow):</b> Shared discovery of new movements from freedom and listening.<br><b>Chaos (Over):</b> Trying too hard to be 'original', creating confusion and disconnection." },
-                    { id: 12, name: "Leading & Yielding", under: "Passivity", balanced: "Role sharing", over: "Exclusive control", desc: "Balance between the initiator (leader) and responder (follower).<br><br><b>Passivity (Under):</b> Total lack of initiative, becoming a 'sack of potatoes'.<br><b>Role sharing (Flow):</b> A dance where leadership shifts naturally between the two.<br><b>Exclusive control (Over):</b> Attempting to force moves on the partner and dictate the dance." },
-                    { id: 13, name: "Endings & Partings", under: "Sudden abandonment", balanced: "Gradual dissolving", over: "Forced prolongation", desc: "The way the dance comes to an end.<br><br><b>Abandonment (Under):</b> Sharp and cold leaving without preparation.<br><b>Gradual dissolving (Flow):</b> An ending that is felt and agreed upon by both sides, often with a natural slowdown.<br><b>Forced prolongation (Over):</b> Difficulty letting go even when the shared energy has ended." }
-                ]
-            }
-        ];
-
-        const axesDataEmotional_en = [
-            {
-                title: "1. Attunement & Presence",
-                desc: "The mental and emotional infrastructure for the encounter and the ability to regulate the connection.",
-                params: [
-                    { id: 0, name: "Rupture & Repair", under: "Freezing/Embarrassment", balanced: "Shared reorganization", over: "Forceful 'fixing'", desc: "<b>Under-response:</b> Loss of contact leads to freezing, embarrassment, or complete stop. Difficulty recovering.<br><br><b>Flow:</b> A 'rupture' is seen as an opportunity for new meaning and shared reorganization.<br><br><b>Over-response:</b> Forceful or stressed attempt to 'catch' the partner immediately without listening to their state." },
-                    { id: 1, name: "Affective Resonance", under: "Mechanical/Disconnected", balanced: "Goldilocks Zone/Empathy", over: "Emotional flooding", desc: "<b>Under-response:</b> Cold and disconnected mechanical movement. No mutual influence.<br><br><b>Flow:</b> Presence in the 'Goldilocks Zone' - flexible connection allowing empathy without losing center.<br><br><b>Over-response:</b> Over-identification or emotional flooding (Enmeshment) that impairs responsiveness." },
-                    { id: 2, name: "Social Presence", under: "Strong sense of separation", balanced: "The Shared Third", over: "Self-annihilation", desc: "<b>Under-response:</b> Strong sense of separation ('dancing next to'). Technical synchrony only.<br><br><b>Flow:</b> Experience of 'The Shared Third' - the dance as an entity greater than the sum of its parts.<br><br><b>Over-response:</b> Canceling the self for the sake of togetherness; blurring boundaries and personal expression." }
-                ]
-            },
-            {
-                title: "2. Mechanics & Interaction",
-                desc: "The physical expression of synchrony, movement quality, and pace leading.",
-                params: [
-                    { id: 3, name: "Zeitgeber Balance (Leading)", under: "Total passive pacing", balanced: "Fluid exchange", over: "Constant rigid leading", desc: "<b>Under-response:</b> Total passive following (Pacing) without giving information back.<br><br><b>Flow:</b> Fluid and spontaneous exchange between leading and following; 'pure synchrony'.<br><br><b>Over-response:</b> Constant and rigid leading without the ability to listen to the partner's impulses." },
-                    { id: 4, name: "Stability of Synchrony", under: "Random & broken", balanced: "Stable yet dynamic", over: "Compulsive repetition", desc: "<b>Under-response:</b> Random and broken synchrony. Jumping between ideas without exhaustion.<br><br><b>Flow:</b> Stable yet dynamic synchrony; coordinated entry and exit from movement patterns.<br><br><b>Over-response:</b> Rigid synchrony and compulsive repetition of a fixed pattern." },
-                    { id: 5, name: "Multimodal Integration", under: "Disconnection between levels", balanced: "Deep attunement", over: "Forced mimicry", desc: "<b>Under-response:</b> Disconnection between levels (e.g., fast movement with held breath or staring).<br><br><b>Flow:</b> Deep attunement where breath, rhythm, and movement resonate with each other.<br><br><b>Over-response:</b> Attempting to mimic the partner in a synthetic and forced way." }
-                ]
-            },
-            {
-                title: "3. Chronological Evolution",
-                desc: "The development of the dance as a narrative process of closeness and meaning-making.",
-                params: [
-                    { id: 6, name: "Probing & Invitation", under: "Avoiding clear offer", balanced: "Gentle proposals", over: "Rapid invasion", desc: "<b>Under-response:</b> Avoiding a clear offer; passively waiting for the partner's initiative.<br><br><b>Flow:</b> Gentle proposals leaving room for the partner to choose how to respond.<br><br><b>Over-response:</b> Rapid invasion of personal space; forcing contact without signs of readiness." },
-                    { id: 7, name: "Acquaintance & Direction", under: "Difficulty finding 'language'", balanced: "'Creative uncertainty'", over: "Forcing a style", desc: "<b>Under-response:</b> Difficulty finding a 'shared language'; each dances in a different style without attempting to bridge.<br><br><b>Flow:</b> A period of 'creative uncertainty'; attentive listening to the emerging shared rhythm.<br><br><b>Over-response:</b> Attempting to force a certain style; impatience with the searching process." },
-                    { id: 8, name: "Core Flow (Deepening)", under: "Stuck on surface", balanced: "'We are being danced'", over: "Losing self/Flooding", desc: "<b>Under-response:</b> Stuckness at a superficial level; repeating familiar movements without risking deep connection.<br><br><b>Flow:</b> Full flow; the feeling of 'we are being danced' out of trust, shared weight, and use of 'mistakes'.<br><br><b>Over-response:</b> Losing oneself in the intensity; sensory or emotional 'flooding' leading to loss of control." },
-                    { id: 9, name: "Ending & Parting", under: "Sudden/panicked disconnect", balanced: "Gradual parting", over: "Squeezing time", desc: "<b>Under-response:</b> Sudden and panicked disconnection; inability to signal the end of the interaction respectfully.<br><br><b>Flow:</b> Gradual parting (Decelerando); acknowledging the shared experience and leaving a 'taste for more'.<br><br><b>Over-response:</b> Difficulty letting go; 'squeezing' the time beyond the partner's or the space's capacity to contain." }
-                ]
-            }
-        ];
-
-        document.addEventListener('DOMContentLoaded', () => {
-
-            let currentLang = 'he';
-            let isMovementMode = true;
-            let currentValuesMovement = new Array(14).fill(50);
-            let currentValuesEmotional = new Array(10).fill(50);
-            
-            let radarChart, modalRadarChart;
-            let currentAxesData = axesDataMovement_he;
-            
-            const slidersContainer = document.getElementById('sliders-container');
-
-            window.toggleLang = function() {
-                currentLang = currentLang === 'he' ? 'en' : 'he';
-                document.documentElement.dir = currentLang === 'he' ? 'rtl' : 'ltr';
-                document.documentElement.lang = currentLang;
-                
-                document.getElementById('btnLangToggle').innerText = currentLang === 'he' ? 'EN' : 'HE';
-
-                document.querySelectorAll('[data-i18n]').forEach(el => {
-                    const key = el.getAttribute('data-i18n');
-                    if (translations[currentLang][key]) {
-                        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-                            el.placeholder = translations[currentLang][key];
-                        } else {
-                            el.innerHTML = translations[currentLang][key];
-                        }
-                    }
-                });
-
-                if (isMovementMode) {
-                    currentAxesData = currentLang === 'he' ? axesDataMovement_he : axesDataMovement_en;
-                } else {
-                    currentAxesData = currentLang === 'he' ? axesDataEmotional_he : axesDataEmotional_en;
-                }
-
-                renderSliders();
-                renderDeepDives();
-                updateCharts();
-            };
-
-            window.openHelpModal = function() {
-                const helpModal = document.getElementById('helpModal');
-                helpModal.classList.remove('hidden');
-                setTimeout(() => {
-                    helpModal.classList.remove('opacity-0');
-                    helpModal.firstElementChild.classList.remove('scale-95');
-                }, 10);
-            };
-            window.closeHelpModal = function() {
-                const helpModal = document.getElementById('helpModal');
-                helpModal.classList.add('opacity-0');
-                helpModal.firstElementChild.classList.add('scale-95');
-                setTimeout(() => helpModal.classList.add('hidden'), 300);
-            };
-
-            window.openInfoModal = function(title, desc) {
-                const infoModal = document.getElementById('infoModal');
-                document.getElementById('infoModalTitle').innerText = title;
-                document.getElementById('infoModalDesc').innerHTML = desc;
-                infoModal.classList.remove('hidden');
-                setTimeout(() => {
-                    infoModal.classList.remove('opacity-0');
-                    infoModal.firstElementChild.classList.remove('scale-95');
-                }, 10);
-            };
-            window.closeInfoModal = function() {
-                const infoModal = document.getElementById('infoModal');
-                infoModal.classList.add('opacity-0');
-                infoModal.firstElementChild.classList.add('scale-95');
-                setTimeout(() => infoModal.classList.add('hidden'), 300);
-            };
-
-            document.getElementById('btnTopHelp').addEventListener('click', openHelpModal);
-            document.getElementById('btnFloatingHelp').addEventListener('click', openHelpModal);
-            
-            document.getElementById('helpModal').addEventListener('click', (e) => { if(e.target === document.getElementById('helpModal')) closeHelpModal(); });
-            document.getElementById('infoModal').addEventListener('click', (e) => { if(e.target === document.getElementById('infoModal')) closeInfoModal(); });
-
-            const mapModal = document.getElementById('mapPopupModal');
-            document.getElementById('btnOpenMapPopup').addEventListener('click', () => {
-                mapModal.classList.remove('hidden');
-                setTimeout(() => {
-                    mapModal.classList.remove('opacity-0');
-                    mapModal.firstElementChild.classList.remove('scale-95');
-                }, 10);
-            });
-
-            function closeMapModal() {
-                mapModal.classList.add('opacity-0');
-                mapModal.firstElementChild.classList.add('scale-95');
-                setTimeout(() => mapModal.classList.add('hidden'), 300);
-            }
-            document.getElementById('btnCloseMapPopupTop').addEventListener('click', closeMapModal);
-            document.getElementById('btnCloseMapPopupBottom').addEventListener('click', closeMapModal);
-
-            // גלילה חלקה למטה לחיצת כפתור מעטפה
-            document.getElementById('btnScrollContact').addEventListener('click', () => {
-                document.getElementById('contact').scrollIntoView({ behavior: 'smooth' });
-            });
-
-            function getColorClass(val) {
-                if (val < 34) return 'text-red-500';
-                if (val < 67) return 'text-emerald-500';
-                return 'text-orange-500';
-            }
-            function getBgColorClass(val) {
-                if (val < 34) return 'bg-red-50';
-                if (val < 67) return 'bg-emerald-50';
-                return 'bg-orange-50';
-            }
-
-            function updateSliderStyle(slider, val) {
-                const percentage = val + '%';
-                let color = '#10b981'; // green
-                if(val < 34) color = '#ef4444'; // red
-                else if(val > 66) color = '#f97316'; // orange
-                
-                const direction = currentLang === 'he' ? 'left' : 'right';
-                slider.style.background = `linear-gradient(to ${direction}, ${color} ${percentage}, #e2e8f0 ${percentage})`;
-            }
-
-            function toggleMode(isMovement) {
-                isMovementMode = isMovement;
-                const btnModeMovement = document.getElementById('btnModeMovement');
-                const btnModeEmotional = document.getElementById('btnModeEmotional');
-
-                if (isMovement) {
-                    currentAxesData = currentLang === 'he' ? axesDataMovement_he : axesDataMovement_en;
-                    btnModeMovement.className = "px-6 py-2.5 rounded-xl font-bold transition-all bg-white text-indigo-800 shadow-sm text-sm md:text-base";
-                    btnModeEmotional.className = "px-6 py-2.5 rounded-xl font-bold transition-all text-indigo-600/80 hover:text-indigo-800 text-sm md:text-base";
-                    document.getElementById('radarTitle').innerText = translations[currentLang].radarTitleMove;
-                    document.getElementById('modalRadarTitle').innerText = translations[currentLang].radarTitleMove;
-                    document.getElementById('deepDiveMovement').classList.replace('hidden', 'block');
-                    document.getElementById('deepDiveEmotional').classList.replace('block', 'hidden');
-                } else {
-                    currentAxesData = currentLang === 'he' ? axesDataEmotional_he : axesDataEmotional_en;
-                    btnModeEmotional.className = "px-6 py-2.5 rounded-xl font-bold transition-all bg-white text-indigo-800 shadow-sm text-sm md:text-base";
-                    btnModeMovement.className = "px-6 py-2.5 rounded-xl font-bold transition-all text-indigo-600/80 hover:text-indigo-800 text-sm md:text-base";
-                    document.getElementById('radarTitle').innerText = translations[currentLang].radarTitleEmo;
-                    document.getElementById('modalRadarTitle').innerText = translations[currentLang].radarTitleEmo;
-                    document.getElementById('deepDiveEmotional').classList.replace('hidden', 'block');
-                    document.getElementById('deepDiveMovement').classList.replace('block', 'hidden');
-                }
-                document.querySelectorAll('.accordion-button').forEach(btn => {
-                    btn.setAttribute('aria-expanded', 'false');
-                    btn.nextElementSibling.classList.remove('open');
-                });
-                renderSliders();
-                updateCharts();
-            }
-
-            document.getElementById('btnModeMovement').addEventListener('click', () => toggleMode(true));
-            document.getElementById('btnModeEmotional').addEventListener('click', () => toggleMode(false));
-
-            window.toggleAccordion = function(btn) {
-                const content = btn.nextElementSibling;
-                const isExpanded = btn.getAttribute('aria-expanded') === 'true';
-                if (!isExpanded) {
-                    btn.setAttribute('aria-expanded', 'true');
-                    content.classList.add('open');
-                } else {
-                    btn.setAttribute('aria-expanded', 'false');
-                    content.classList.remove('open');
-                }
-            };
-
-            window.showAxisInfo = function(catIndex, e) {
-                e.stopPropagation(); 
-                openInfoModal(currentAxesData[catIndex].title, currentAxesData[catIndex].desc);
-            };
-
-            window.showParamInfo = function(catIndex, paramIndex) {
-                const param = currentAxesData[catIndex].params[paramIndex];
-                openInfoModal(param.name, param.desc);
-            };
-
-            function renderSliders() {
-                const currentValues = isMovementMode ? currentValuesMovement : currentValuesEmotional;
-                let html = '';
-
-                currentAxesData.forEach((category, catIndex) => {
-                    html += `
-                    <div class="border border-indigo-100 rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow mb-8">
-                        <button class="accordion-button w-full px-5 py-4 flex justify-between items-center bg-indigo-50/50 hover:bg-indigo-50 transition-colors" aria-expanded="true" onclick="toggleAccordion(this)">
-                            <div class="flex items-center gap-3">
-                                <h3 class="text-xl font-bold text-indigo-900 m-0 text-start">${category.title}</h3>
-                                <div onclick="showAxisInfo(${catIndex}, event)" class="bg-indigo-100 text-indigo-600 hover:bg-indigo-200 hover:text-indigo-800 rounded-full w-7 h-7 flex items-center justify-center transition-colors cursor-pointer shrink-0" title="Info">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                </div>
-                            </div>
-                            <svg class="chevron w-6 h-6 text-indigo-400 rotate-180 shrink-0 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </button>
-                        <div class="accordion-content open">
-                            <div class="p-5 space-y-8 bg-white">
-                `;
-
-                    category.params.forEach((param, paramIndex) => {
-                        const val = currentValues[param.id];
-                        const colorClass = getColorClass(val);
-                        const bgClass = getBgColorClass(val);
-
-                        html += `
-                        <div class="relative ${bgClass} p-4 rounded-xl border border-white transition-colors duration-300" id="param-container-${param.id}">
-                            <div class="flex justify-between items-start mb-3">
-                                <div class="flex items-center gap-2">
-                                    <label class="font-bold text-slate-800 text-lg text-start">${param.name}</label>
-                                    <button onclick="showParamInfo(${catIndex}, ${paramIndex})" class="text-slate-400 hover:text-indigo-600 bg-white/50 hover:bg-white rounded-full p-1 transition-colors" title="Info">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    </button>
-                                </div>
-                                <span class="font-mono font-bold text-lg w-10 text-center ${colorClass}" id="valDisplay-${param.id}">${val}</span>
-                            </div>
-                            
-                            <div class="relative pt-2 pb-6">
-                                <input type="range" min="0" max="100" value="${val}" 
-                                    class="w-full slider-input" 
-                                    id="slider-${param.id}"
-                                    oninput="updateValue(${param.id}, this.value)">
-                                
-                                <div class="flex justify-between text-xs font-medium text-slate-500 mt-3 px-1">
-                                    <span class="w-1/3 text-start pr-1">${param.under}</span>
-                                    <span class="w-1/3 text-center">${param.balanced}</span>
-                                    <span class="w-1/3 text-end pl-1">${param.over}</span>
-                                </div>
-                            </div>
-                        </div>
-                        `;
-                    });
-
-                    html += `</div></div></div>`;
-                });
-
-                slidersContainer.innerHTML = html;
-                
-                setTimeout(() => {
-                    currentAxesData.forEach(category => {
-                        category.params.forEach(param => {
-                            const slider = document.getElementById(`slider-${param.id}`);
-                            if(slider) updateSliderStyle(slider, currentValues[param.id]);
-                        });
-                    });
-                }, 0);
-            }
-
-            window.updateValue = function(id, value) {
-                const valNum = parseInt(value);
-                if (isMovementMode) {
-                    currentValuesMovement[id] = valNum;
-                } else {
-                    currentValuesEmotional[id] = valNum;
-                }
-                
-                document.getElementById(`valDisplay-${id}`).innerText = value;
-                
-                const colorClass = getColorClass(valNum);
-                const bgClass = getBgColorClass(valNum);
-                
-                const displayEl = document.getElementById(`valDisplay-${id}`);
-                displayEl.className = `font-mono font-bold text-lg w-10 text-center ${colorClass}`;
-                
-                const containerEl = document.getElementById(`param-container-${id}`);
-                containerEl.className = `relative ${bgClass} p-4 rounded-xl border border-white transition-colors duration-300`;
-                
-                const slider = document.getElementById(`slider-${id}`);
-                updateSliderStyle(slider, valNum);
-
-                updateCharts();
-            };
-
-            function updateCharts() {
-                const currentValues = isMovementMode ? currentValuesMovement : currentValuesEmotional;
-                
-                const labels = [];
-                const dataPoints = [];
-                const pointColors = [];
-                
-                currentAxesData.forEach(cat => {
-                    cat.params.forEach(p => {
-                        labels.push(p.name);
-                        const val = currentValues[p.id];
-                        dataPoints.push(val);
-                        
-                        if(val < 34) pointColors.push('#ef4444');
-                        else if(val > 66) pointColors.push('#f97316');
-                        else pointColors.push('#10b981');
-                    });
-                });
-
-                const chartConfig = {
-                    type: 'radar',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: isMovementMode ? translations[currentLang].btnMovement : translations[currentLang].btnEmotional,
-                            data: dataPoints,
-                            backgroundColor: 'rgba(79, 70, 229, 0.2)',
-                            borderColor: 'rgba(79, 70, 229, 0.8)',
-                            borderWidth: 2,
-                            pointBackgroundColor: pointColors,
-                            pointBorderColor: '#fff',
-                            pointHoverBackgroundColor: '#fff',
-                            pointHoverBorderColor: pointColors,
-                            pointRadius: 5,
-                            pointHoverRadius: 7
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            r: {
-                                angleLines: { color: 'rgba(0, 0, 0, 0.05)' },
-                                grid: { color: 'rgba(0, 0, 0, 0.05)' },
-                                pointLabels: { font: { family: 'system-ui', size: 11, weight: '600' }, color: '#475569' },
-                                ticks: { display: false, min: 0, max: 100, stepSize: 33 }
-                            }
-                        },
-                        plugins: { legend: { display: false } }
-                    }
-                };
-
-                if (radarChart) radarChart.destroy();
-                const ctx = document.getElementById('radarChart').getContext('2d');
-                radarChart = new Chart(ctx, chartConfig);
-
-                if (modalRadarChart) modalRadarChart.destroy();
-                const modalCtx = document.getElementById('modalRadarChart').getContext('2d');
-                modalRadarChart = new Chart(modalCtx, chartConfig);
-            }
-
-            window.copyPrompt = function(textAreaId) {
-                const userText = document.getElementById(textAreaId).value;
-                const modeText = isMovementMode ? translations[currentLang].btnMovement : translations[currentLang].btnEmotional;
-                const values = isMovementMode ? currentValuesMovement : currentValuesEmotional;
-                
-                let prompt = `${translations[currentLang].promptGreeting} ${modeText}.\n${translations[currentLang].promptValues}\n\n`;
-                
-                currentAxesData.forEach(cat => {
-                    cat.params.forEach(p => {
-                        let state = translations[currentLang].promptStateFlow;
-                        if(values[p.id] < 34) state = translations[currentLang].promptStateUnder;
-                        if(values[p.id] > 66) state = translations[currentLang].promptStateOver;
-                        prompt += `- ${p.name}: ${values[p.id]} (${state})\n`;
-                    });
-                });
-
-                prompt += `\n${translations[currentLang].promptQuestion} ${userText || translations[currentLang].promptDefaultQ}`;
-
-                navigator.clipboard.writeText(prompt).then(() => {
-                    const toast = document.getElementById('copyToast');
-                    toast.classList.remove('hidden');
-                    setTimeout(() => toast.classList.add('hidden'), 3000);
-                });
-            };
-
-            window.sendDataToSheet = function(btnElement, suffix) {
-                if (GOOGLE_SCRIPT_URL === "YOUR_WEB_APP_URL_HERE") {
-                    alert("Error: GOOGLE_SCRIPT_URL is not set.");
-                    return;
-                }
-
-                const originalHTML = btnElement.innerHTML;
-                const saveText = currentLang === 'he' ? 'שומר...' : 'Saving...';
-                btnElement.innerHTML = `<div class="spinner w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div><span class="btn-text">${saveText}</span>`;
-                btnElement.disabled = true;
-
-                const nameInput = document.getElementById(`userName${suffix}`).value;
-                const emailInput = document.getElementById(`userEmail${suffix}`).value;
-                const locInput = document.getElementById(`userLoc${suffix}`).value;
-
-                const localeStr = currentLang === 'he' ? 'he-IL' : 'en-US';
-
-                const payload = {
-                    metadata: {
-                        date: new Date().toLocaleDateString(localeStr),
-                        time: new Date().toLocaleTimeString(localeStr),
-                        name: nameInput,
-                        email: emailInput,
-                        location: locInput
-                    },
-                    movement: currentValuesMovement,
-                    emotional: currentValuesEmotional
-                };
-
-                fetch(GOOGLE_SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                })
-                .then(() => {
-                    const toast = document.getElementById('cloudToast');
-                    toast.classList.remove('hidden');
-                    setTimeout(() => toast.classList.add('hidden'), 3500);
-                })
-                .catch(error => {
-                    alert("Error saving data: " + error);
-                })
-                .finally(() => {
-                    btnElement.innerHTML = originalHTML;
-                    btnElement.disabled = false;
-                });
-            };
-
-            window.downloadExport = function() {
-                const date = new Date().toLocaleString(currentLang === 'he' ? 'he-IL' : 'en-US');
-                let text = `${translations[currentLang].exportTitle}\n${translations[currentLang].exportDate}: ${date}\n\n`;
-                
-                text += `--- ${translations[currentLang].btnMovement} ---\n`;
-                const mData = currentLang === 'he' ? axesDataMovement_he : axesDataMovement_en;
-                mData.forEach(cat => {
-                    cat.params.forEach(p => { text += `${p.name}: ${currentValuesMovement[p.id]}\n`; });
-                });
-                
-                text += `\n--- ${translations[currentLang].btnEmotional} ---\n`;
-                const eData = currentLang === 'he' ? axesDataEmotional_he : axesDataEmotional_en;
-                eData.forEach(cat => {
-                    cat.params.forEach(p => { text += `${p.name}: ${currentValuesEmotional[p.id]}\n`; });
-                });
-
-                const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'CI_Matrix_Export.txt';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            };
-
-            function renderDeepDives() {
-                const movementContainer = document.getElementById('deepDiveMovement');
-                const dataMove = currentLang === 'he' ? axesDataMovement_he : axesDataMovement_en;
-                let movHtml = '';
-                dataMove.forEach((cat, i) => {
-                    movHtml += `
-                    <div class="bg-white rounded-2xl shadow-sm border border-indigo-100 overflow-hidden">
-                        <button class="accordion-button w-full flex items-center justify-between p-5 text-start hover:bg-indigo-50 transition-colors" aria-expanded="false" onclick="toggleAccordion(this)">
-                            <h3 class="text-lg font-bold text-indigo-900">${cat.title}</h3>
-                            <svg class="w-6 h-6 text-indigo-500 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </button>
-                        <div class="accordion-content bg-slate-50/50 border-t border-indigo-50">
-                            <div class="p-5 space-y-4 text-sm text-slate-700 text-start">
-                                <p class="text-slate-600 mb-4">${cat.desc}</p>
-                    `;
-                    cat.params.forEach(p => {
-                        movHtml += `<div><strong class="text-indigo-800 block mb-1">${p.name}:</strong>${p.desc}</div>`;
-                    });
-                    movHtml += `</div></div></div>`;
-                });
-                movementContainer.innerHTML = movHtml;
-
-                const emotionalContainer = document.getElementById('deepDiveEmotional');
-                const dataEmo = currentLang === 'he' ? axesDataEmotional_he : axesDataEmotional_en;
-                let emoHtml = '';
-                dataEmo.forEach((cat, i) => {
-                    emoHtml += `
-                    <div class="bg-white rounded-2xl shadow-sm border border-indigo-100 overflow-hidden">
-                        <button class="accordion-button w-full flex items-center justify-between p-5 text-start hover:bg-indigo-50 transition-colors" aria-expanded="false" onclick="toggleAccordion(this)">
-                            <h3 class="text-lg font-bold text-indigo-900">${cat.title}</h3>
-                            <svg class="w-6 h-6 text-indigo-500 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </button>
-                        <div class="accordion-content bg-slate-50/50 border-t border-indigo-50">
-                            <div class="p-5 space-y-4 text-sm text-slate-700 text-start">
-                                <p class="text-slate-600 mb-4">${cat.desc}</p>
-                    `;
-                    cat.params.forEach(p => {
-                        emoHtml += `<div><strong class="text-indigo-800 block mb-1">${p.name}:</strong>${p.desc}</div>`;
-                    });
-                    emoHtml += `</div></div></div>`;
-                });
-                emotionalContainer.innerHTML = emoHtml;
-            }
-
-            window.closeAllPopovers = function() {
-                document.querySelectorAll('.info-popover').forEach(p => p.classList.add('hidden'));
-            };
-
-            document.addEventListener('click', (e) => {
-                const toggleBtn = e.target.closest('.toggle-popover-btn');
-                if (toggleBtn) {
-                    e.stopPropagation(); 
-                    const container = toggleBtn.closest('.info-trigger-container');
-                    if(container) {
-                        const popover = container.querySelector('.info-popover');
-                        if(popover) {
-                            const isCurrentlyHidden = popover.classList.contains('hidden');
-                            window.closeAllPopovers();
-                            if (isCurrentlyHidden) popover.classList.remove('hidden');
-                        }
-                    }
-                    return;
-                }
-                if (!e.target.closest('.info-popover')) {
-                    window.closeAllPopovers();
-                }
-            });
-
-            renderDeepDives();
-            renderSliders();
-            updateCharts();
+      ]
+    }
+  };
+
+  const [matrixParams, setMatrixParams] = useState(defaultMatrix);
+
+  useEffect(() => {
+    const savedHistory = localStorage.getItem('ci_reflection_history_v7');
+    if (savedHistory) {
+      try { setHistory(JSON.parse(savedHistory)); } catch (e) { console.error(e); }
+    }
+    const savedCustomMatrix = localStorage.getItem('ci_custom_matrix_v7');
+    if (savedCustomMatrix) {
+      try { setMatrixParams(JSON.parse(savedCustomMatrix)); } catch (e) { console.error(e); }
+    } else {
+      setMatrixParams(defaultMatrix);
+    }
+  }, [lang]);
+
+  const saveIteration = () => {
+    const newEntry = { timestamp: new Date().toLocaleString(lang === 'he' ? 'he-IL' : 'en-US'), data: { ...responses } };
+    const newHistory = [newEntry, ...history];
+    setHistory(newHistory);
+    localStorage.setItem('ci_reflection_history_v7', JSON.stringify(newHistory));
+    setIsSaved(true);
+    setTimeout(() => setIsSaved(false), 2000);
+  };
+
+  const shareApp = async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: cur.title,
+          text: cur.subtitle,
+          url: url
         });
-    </script>
-</body>
-</html>
+      } catch (err) {
+        console.log("Share failed", err);
+      }
+    } else {
+      navigator.clipboard.writeText(url);
+      alert(cur.linkCopied);
+    }
+  };
+
+  const RadarChart = ({ datasets, size = 300 }) => {
+    const allParams = useMemo(() => {
+      const params = [];
+      Object.values(matrixParams).forEach(cat => cat.params.forEach(p => params.push(p)));
+      return params;
+    }, [matrixParams]);
+
+    const center = size / 2;
+    const radius = size * 0.35;
+    const angleStep = (Math.PI * 2) / allParams.length;
+    const colors = ['#4f46e5', '#10b981', '#f59e0b', '#ec4899', '#06b6d4'];
+
+    const renderPolygon = (dataset, index) => {
+      const points = allParams.map((p, i) => {
+        const val = parseInt(dataset.data[p.id]) || 5;
+        const r = (val / 10) * radius;
+        const angle = i * angleStep - Math.PI / 2;
+        return { x: center + r * Math.cos(angle), y: center + r * Math.sin(angle) };
+      });
+      const path = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
+      const color = colors[index % colors.length];
+      
+      return (
+        <g key={index}>
+          <path d={path} fill={`${color}22`} stroke={color} strokeWidth="2" strokeLinejoin="round" />
+          {points.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="3" fill={color} />)}
+        </g>
+      );
+    };
+
+    const shareResult = async () => {
+       let text = `${cur.title} - ${lang === 'he' ? 'תוצאות' : 'Results'}\n\n`;
+       datasets.forEach(d => {
+         text += `--- ${d.label} ---\n`;
+         Object.values(matrixParams).forEach(cat => {
+           cat.params.forEach(p => {
+             text += `${p.label}: ${d.data[p.id] || 5}/10\n`;
+           });
+         });
+         text += '\n';
+       });
+
+       if (navigator.share) {
+         try {
+           await navigator.share({
+             title: `${cur.title} Results`,
+             text: text,
+           });
+         } catch (err) {
+           console.log("Share failed", err);
+         }
+       } else {
+         navigator.clipboard.writeText(text);
+         alert(cur.resultCopied);
+       }
+    };
+
+    const saveRadarImageLocal = () => {
+      const svgElement = document.getElementById("radar-chart-svg");
+      if (!svgElement) return;
+      
+      const serializer = new XMLSerializer();
+      let source = serializer.serializeToString(svgElement);
+      
+      if(!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)){
+          source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+      }
+      
+      const svgBlob = new Blob([source], {type: "image/svg+xml;charset=utf-8"});
+      const url = URL.createObjectURL(svgBlob);
+      
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = svgElement.baseVal?.width?.value || 440;
+        canvas.height = svgElement.baseVal?.height?.value || 440;
+        
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+        
+        const imgURL = canvas.toDataURL("image/png");
+        const a = document.createElement("a");
+        a.download = `ContactWays_Radar_${new Date().toISOString().slice(0,10)}.png`;
+        a.href = imgURL;
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+      img.src = url;
+    };
+
+    return (
+      <div className="flex flex-col items-center justify-center p-6 bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden relative">
+        <div className="flex justify-between items-center w-full mb-4">
+           <h3 className="text-xl font-black text-slate-900">{lang === 'he' ? 'מפת איכויות הריקוד' : 'Dance Quality Map'}</h3>
+           <div className="flex gap-2">
+             <button onClick={shareResult} className="p-2 bg-indigo-50 hover:bg-indigo-100 rounded-xl text-indigo-600 transition-colors flex items-center gap-2" title={cur.shareResult}>
+               <Share2 className="w-4 h-4" />
+               <span className="text-xs font-bold hidden sm:inline">{cur.shareResult}</span>
+             </button>
+             <button onClick={saveRadarImageLocal} className="p-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-600 transition-colors flex items-center gap-2" title={cur.saveImage}>
+               <Camera className="w-4 h-4" />
+               <span className="text-xs font-bold hidden sm:inline">{cur.saveImage}</span>
+             </button>
+           </div>
+        </div>
+        
+        {datasets.length > 1 && (
+          <div className="flex flex-wrap gap-2 mb-4 justify-center">
+            {datasets.map((d, i) => (
+              <div key={i} className="flex items-center gap-1 text-[10px] font-bold" style={{color: colors[i % colors.length]}}>
+                <div className="w-2 h-2 rounded-full" style={{backgroundColor: colors[i % colors.length]}}></div>
+                {d.label}
+              </div>
+            ))}
+          </div>
+        )}
+
+        <svg id="radar-chart-svg" width={size + 140} height={size + 140} viewBox={`-70 -70 ${size + 140} ${size + 140}`} className="max-w-full" xmlns="http://www.w3.org/2000/svg">
+          {[2, 4, 6, 8, 10].map(v => (
+            <circle key={v} cx={center} cy={center} r={(v/10) * radius} fill="none" stroke="#f1f5f9" strokeWidth="1" />
+          ))}
+          {allParams.map((p, i) => (
+            <line key={i} x1={center} y1={center} x2={center + radius * Math.cos(i * angleStep - Math.PI / 2)} y2={center + radius * Math.sin(i * angleStep - Math.PI / 2)} stroke="#f1f5f9" />
+          ))}
+          
+          {datasets.map((dataset, idx) => renderPolygon(dataset, idx))}
+
+          {allParams.map((p, i) => {
+              const angle = i * angleStep - Math.PI / 2;
+              const labelX = center + (radius + 25) * Math.cos(angle);
+              const labelY = center + (radius + 25) * Math.sin(angle);
+              const textAnchor = labelX > center ? "start" : "end";
+              return (
+                <text key={i} x={labelX} y={labelY} fontSize="10" fontWeight="700" textAnchor={textAnchor} dominantBaseline="middle" fill="#64748b" style={{fontFamily: 'Assistant, sans-serif'}}>
+                  {p.label}
+                </text>
+              );
+          })}
+        </svg>
+      </div>
+    );
+  };
+
+  const showInfo = (param) => setHelpContent(param);
+
+  const getStatusColor = (v) => {
+    if (!v) return 'bg-slate-200';
+    const val = parseInt(v);
+    if (val >= 4 && val <= 7) return 'bg-indigo-500';
+    if (val < 4) return 'bg-amber-400';
+    return 'bg-rose-400';
+  };
+
+  const getRadarDatasets = () => {
+    if (historyViewMode === 'single') {
+      const currentData = viewedIterationIndex === history.length ? responses : history[viewedIterationIndex].data;
+      const label = viewedIterationIndex === history.length ? 'LIVE' : history[viewedIterationIndex].timestamp;
+      return [{ data: currentData, label }];
+    } else if (historyViewMode === 'overlay') {
+      return history.slice(0, 4).map((h, i) => ({ data: h.data, label: h.timestamp }));
+    }
+    return [];
+  };
+
+  const downloadQuestionnaireCSVLocal = () => {
+    let csv = '\uFEFFCategory,ID,Label,Desc,Under,Flow,Over,Label_Under,Label_Flow,Label_Over\n';
+    Object.entries(matrixParams).forEach(([catKey, catVal]) => {
+      catVal.params.forEach(p => {
+        const escape = (str) => `"${(str || '').replace(/"/g, '""')}"`;
+        csv += `${escape(catKey)},${escape(p.id)},${escape(p.label)},${escape(p.info?.desc)},${escape(p.info?.under)},${escape(p.info?.flow)},${escape(p.info?.over)},${escape(p.labels?.[0])},${escape(p.labels?.[1])},${escape(p.labels?.[2])}\n`;
+      });
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a"); link.href = url; link.download = "questionnaire_template.csv";
+    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+  };
+
+  const handleQuestionnaireUploadLocal = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target.result;
+      const rows = text.split('\n').map(row => {
+        const matches = row.match(/(\s*"[^"]+"\s*|\s*[^,]+|,)(?=,|$)/g);
+        return matches ? matches.map(m => m.replace(/^,/, '').replace(/^"|"$/g, '').trim()) : [];
+      });
+
+      const newMatrix = {
+        mechanics: { title: lang === 'he' ? "מכניקה ותנועה" : "Mechanics & Movement", params: [] },
+        presence: { title: lang === 'he' ? "נוכחות רגשית" : "Emotional Presence", params: [] },
+        timeline: { title: lang === 'he' ? "זמן" : "Time", params: [] }
+      };
+      
+      for(let i=1; i<rows.length; i++) {
+        if(rows[i].length >= 4) {
+          const [cat, id, label, desc, under, flow, over, lUnder, lFlow, lOver] = rows[i];
+          if(cat && newMatrix[cat]) {
+            newMatrix[cat].params.push({ 
+              id, label, 
+              labels: [lUnder || 'Under', lFlow || 'Flow', lOver || 'Over'],
+              info: { desc, under, flow, over } 
+            });
+          }
+        }
+      }
+      setMatrixParams(newMatrix);
+      localStorage.setItem('ci_custom_matrix_v7', JSON.stringify(newMatrix));
+      setShowDataMenu(false);
+      alert(lang === 'he' ? 'השאלון עודכן בהצלחה!' : 'Questionnaire updated successfully!');
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  const exportHistoryJSONLocal = () => {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(history, null, 2));
+    const link = document.createElement("a"); link.href = dataStr; link.download = "contact_ways_history.json";
+    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+  };
+
+  const handleHistoryUploadLocal = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const imported = JSON.parse(event.target.result);
+        if (Array.isArray(imported)) {
+          const combined = [...imported, ...history];
+          setHistory(combined);
+          localStorage.setItem('ci_reflection_history_v7', JSON.stringify(combined));
+          setShowDataMenu(false);
+          alert(lang === 'he' ? 'הנתונים האישיים יובאו בהצלחה (התווספו לקיים).' : 'Data imported successfully.');
+        }
+      } catch (err) {
+        alert(lang === 'he' ? 'שגיאה: קובץ לא תקין' : 'Error: Invalid file format');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  return (
+    <div className={`min-h-screen bg-[#f8fafc] text-slate-900 font-['Assistant',_sans-serif] ${lang === 'he' ? 'rtl' : 'ltr'}`} dir={lang === 'he' ? 'rtl' : 'ltr'}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;800&display=swap');
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+      `}</style>
+
+      {/* Header */}
+      <header className="bg-white border-b border-slate-200 px-6 py-6 sticky top-0 z-40">
+        <div className="max-w-2xl mx-auto">
+          <div className="relative flex flex-col items-center justify-center mb-6">
+            <div className={`absolute top-0 ${lang === 'he' ? 'left-0' : 'right-0'} flex gap-2`}>
+               <button onClick={shareApp} className="p-2 bg-slate-100 rounded-lg text-slate-600 hover:bg-slate-200 transition-colors" title={cur.shareApp}>
+                 <Share2 className="w-4 h-4" />
+               </button>
+               <button onClick={() => setLang(lang === 'he' ? 'en' : 'he')} className="px-3 py-1.5 bg-slate-100 rounded-lg text-xs font-bold hover:bg-slate-200 uppercase transition-colors">
+                 {lang === 'he' ? 'English' : 'עברית'}
+               </button>
+            </div>
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Contact Ways</h1>
+            <p className="text-xs text-indigo-600 font-bold uppercase tracking-widest mt-1 text-center">{cur.subtitle}</p>
+          </div>
+          
+          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 justify-center">
+            <button onClick={() => setHelpContent({label: cur.about, info: {desc: cur.info.about}})} className="flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-xl text-base font-bold border border-indigo-100">
+              <BookOpen className="w-5 h-5" /> {cur.about}
+            </button>
+            <button onClick={() => setShowMatrixView(true)} className="flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-base font-bold shadow-lg">
+              <LayoutGrid className="w-5 h-5" /> {cur.viewMatrix}
+            </button>
+            <button onClick={() => setShowDataMenu(true)} className="flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-white text-slate-700 rounded-xl text-base font-bold border border-slate-200 shadow-sm">
+              <Layers className="w-5 h-5" /> {cur.data}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-2xl mx-auto p-6 pb-48">
+        
+        {/* Navigation Prompt and Tabs */}
+        <div className="mb-8">
+           <p className="text-center text-sm font-black text-indigo-500 uppercase tracking-widest mb-3">
+             {cur.selectAxis}
+           </p>
+           <div className="flex bg-slate-200/50 rounded-2xl p-1">
+             {Object.keys(matrixParams).map((key) => (
+               <button key={key} onClick={() => setActiveTab(key)} className={`flex-1 py-4 text-base font-black rounded-xl transition-all ${activeTab === key ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+                 {matrixParams[key].title}
+               </button>
+             ))}
+           </div>
+        </div>
+
+        <div className="grid gap-6">
+          <p className={`text-sm font-bold text-slate-400 mb-2 px-2 italic text-center`}>
+            {cur.optionalNote}
+          </p>
+          {matrixParams[activeTab].params.map((param) => (
+            <div key={param.id} className="bg-white rounded-[1.5rem] p-6 shadow-sm border border-slate-100 group">
+              <div className="flex justify-between items-center mb-6">
+                <div className={`flex items-center gap-2 ${lang === 'he' ? 'text-start' : 'text-start'}`}>
+                  <h3 className="font-bold text-slate-800 text-2xl">{param.label}</h3>
+                  <button onClick={() => showInfo(param)} className="text-slate-300 hover:text-indigo-500">
+                    <Info className="w-6 h-6" />
+                  </button>
+                </div>
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white text-lg font-black transition-colors ${getStatusColor(responses[param.id])}`}>
+                  {responses[param.id] || '-'}
+                </div>
+              </div>
+
+              {/* Slider Container */}
+              <div className="relative mb-8 px-1">
+                <input 
+                  type="range" 
+                  min="1" 
+                  max="10" 
+                  step="1" 
+                  value={responses[param.id] || 5} 
+                  onChange={(e) => setResponses(prev => ({...prev, [param.id]: e.target.value}))} 
+                  className="w-full h-3 bg-slate-100 rounded-full appearance-none cursor-pointer accent-indigo-600" 
+                />
+                
+                {/* Dynamic Labels under the slider */}
+                <div className="flex justify-between mt-4 text-sm font-bold text-slate-400 uppercase tracking-tight">
+                  <span className="w-1/3 text-start">{param.labels[0]}</span>
+                  <span className="w-1/3 text-center text-indigo-500 font-black">{param.labels[1]}</span>
+                  <span className="w-1/3 text-end">{param.labels[2]}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* AI SECTION */}
+        <div className={`mt-12 bg-indigo-600 rounded-[2rem] p-8 text-white shadow-xl relative overflow-hidden ${lang === 'he' ? 'text-start' : 'text-start'}`}>
+          <div className="flex items-center gap-4 mb-6"><Zap className="w-6 h-6 text-white" /><h3 className="text-2xl font-black">{cur.ai}</h3></div>
+          <select value={selectedExpert} onChange={(e) => setSelectedExpert(e.target.value)} className={`w-full bg-white/10 border border-white/20 rounded-xl py-3 px-4 text-base font-bold text-white outline-none mb-4 ${lang === 'he' ? 'text-start' : 'text-start'}`}>
+            {Object.entries(cur.experts).map(([key, val]) => (<option key={key} value={key} className="text-slate-900">{val}</option>))}
+          </select>
+          
+          <div className="bg-white/5 rounded-2xl p-4 border border-white/10 mb-4">
+            <label className="text-sm font-bold text-indigo-100 flex items-center gap-1.5 mb-2 px-1">
+              <MessageSquarePlus className="w-5 h-5" />
+              {lang === 'he' ? 'שאלה או בקשה אישית ליועץ ה-AI (אופציונלי):' : 'Custom question for AI (Optional):'}
+            </label>
+            <textarea
+              value={customAIRequest}
+              onChange={(e) => setCustomAIRequest(e.target.value)}
+              placeholder={lang === 'he' ? 'לדוגמה: "הרגשתי כבד מדי היום, איך לשפר נשיאת משקל?"' : 'e.g., "I felt very heavy today..."'}
+              className={`w-full bg-indigo-950/50 border border-indigo-900/50 rounded-xl p-4 text-base font-medium text-white placeholder-indigo-300 outline-none focus:border-indigo-400 resize-none h-24 ${lang === 'he' ? 'text-start' : 'text-start'}`}
+            />
+          </div>
+
+          <button onClick={() => {
+            const expertName = cur.experts[selectedExpert];
+            const customText = customAIRequest ? `\n\nשאלה אישית מהרוקד:\n${customAIRequest}` : "";
+            const langInstr = lang === 'he' ? 'ענה בעברית.' : 'Answer in English.';
+            const prompt = `נתח את תהליך הסנכרון התנועתי שלי ברוח הלימוד של ${expertName}. 
+הנתונים מבוססים על ${history.length} איטרציות. 
+ההיסטוריה: ${JSON.stringify(history, null, 2)}${customText}
+התייחס בבקשה לרמות ה-Under וה-Over שמופיעות בנתונים והצע דרכי עבודה לשיפור ה-Flow. ${langInstr}`;
+            
+            navigator.clipboard.writeText(prompt).then(() => {
+              setShowAiModal(true);
+            }).catch(() => {
+              alert(lang === 'he' ? "שגיאה בהעתקת הפרומפט." : "Error copying prompt.");
+            });
+          }} className="w-full py-4 bg-white text-indigo-600 rounded-xl font-black text-base hover:bg-indigo-50 transition-colors">{lang === 'he' ? 'בצע ניתוח מומחה' : 'Run Analysis'}</button>
+        </div>
+      </main>
+
+      {/* Primary Action Button */}
+      <div className="fixed bottom-8 left-6 right-6 max-w-2xl mx-auto z-30">
+        <button onClick={saveIteration} className={`w-full py-5 rounded-2xl font-black text-xl shadow-2xl flex items-center justify-center gap-4 transition-all ${isSaved ? 'bg-emerald-500 text-white' : 'bg-slate-900 text-white hover:scale-[1.02]'}`}>
+          {isSaved ? <CheckCircle2 className="w-7 h-7" /> : <Save className="w-7 h-7" />}
+          {isSaved ? cur.saved : cur.save}
+        </button>
+      </div>
+
+      {/* --- Matrix / History View Modal --- */}
+      {showMatrixView && (
+        <div className={`fixed inset-0 z-[60] bg-white overflow-y-auto ${lang === 'he' ? 'text-start' : 'text-start'}`}>
+          <div className="max-w-4xl mx-auto p-6">
+            <div className="flex justify-between items-center mb-6 sticky top-0 bg-white py-2 z-10 border-b border-slate-100">
+              <h2 className="text-3xl font-black text-slate-900">{cur.history}</h2>
+              <button onClick={() => setShowMatrixView(false)} className="p-3 bg-slate-100 rounded-full hover:bg-slate-200 transition-colors"><X className="w-6 h-6"/></button>
+            </div>
+            
+            <div className="space-y-6 pb-24">
+              <div className="flex bg-slate-100 p-1 rounded-xl">
+                <button onClick={() => setHistoryViewMode('single')} className={`flex-1 py-3 text-base font-bold rounded-lg ${historyViewMode === 'single' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500'}`}>
+                  {lang === 'he' ? 'תצוגה בודדת' : 'Single'}
+                </button>
+                <button onClick={() => setHistoryViewMode('overlay')} className={`flex-1 py-3 text-base font-bold rounded-lg ${historyViewMode === 'overlay' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500'}`}>
+                  {lang === 'he' ? 'תצוגת Overlay' : 'Overlay'}
+                </button>
+                <button onClick={() => setHistoryViewMode('table')} className={`flex-1 py-3 text-base font-bold rounded-lg ${historyViewMode === 'table' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500'}`}>
+                  {lang === 'he' ? 'טבלת נתונים' : 'Table'}
+                </button>
+              </div>
+
+              {historyViewMode === 'single' && (
+                <div className="bg-slate-50 p-4 rounded-3xl border border-slate-100">
+                  <div className="flex items-center justify-between gap-4 mb-4">
+                    <button disabled={viewedIterationIndex === history.length} onClick={() => setViewedIterationIndex(history.length)} className={`flex-1 py-3 rounded-xl text-sm font-black transition-all ${viewedIterationIndex === history.length ? 'bg-indigo-600 text-white' : 'bg-white border border-slate-200 text-slate-600'}`}>
+                      {lang === 'he' ? 'נתונים נוכחיים' : 'Current Data'}
+                    </button>
+                    {history.length > 0 && (
+                      <div className="flex items-center gap-2 bg-white border border-slate-200 p-1 rounded-xl">
+                        <button disabled={viewedIterationIndex === 0} onClick={() => setViewedIterationIndex(v => Math.max(0, v - 1))} className="p-2 hover:bg-slate-100 rounded-lg disabled:opacity-20">
+                          {lang === 'he' ? <ChevronRight className="w-5 h-5"/> : <ChevronLeft className="w-5 h-5"/>}
+                        </button>
+                        <span className="text-sm font-bold px-3 whitespace-nowrap">{viewedIterationIndex < history.length ? history[viewedIterationIndex].timestamp : 'LIVE'}</span>
+                        <button disabled={viewedIterationIndex >= history.length - 1 && viewedIterationIndex !== history.length} onClick={() => setViewedIterationIndex(v => v + 1)} className="p-2 hover:bg-slate-100 rounded-lg disabled:opacity-20">
+                          {lang === 'he' ? <ChevronLeft className="w-5 h-5"/> : <ChevronRight className="w-5 h-5"/>}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="transform scale-105 my-4">
+                    <RadarChart datasets={getRadarDatasets()} />
+                  </div>
+                </div>
+              )}
+
+              {historyViewMode === 'overlay' && (
+                <div className="bg-slate-50 p-4 rounded-3xl border border-slate-100">
+                   <p className="text-base font-bold text-slate-500 mb-4 text-center">
+                     {lang === 'he' ? 'הצגת 4 הגרסאות האחרונות יחד להשוואה' : 'Overlay of last 4 versions'}
+                   </p>
+                   {history.length > 0 ? (
+                     <div className="transform scale-105 my-4">
+                       <RadarChart datasets={getRadarDatasets()} />
+                     </div>
+                   ) : (
+                     <div className="text-center py-10 text-slate-400 font-bold text-xl">{lang === 'he' ? 'אין מספיק נתונים' : 'Not enough data'}</div>
+                   )}
+                </div>
+              )}
+
+              {historyViewMode === 'table' && (
+                <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden">
+                   <div className="overflow-x-auto custom-scroll">
+                     <table className={`w-full text-base ${lang === 'he' ? 'text-start' : 'text-start'}`}>
+                       <thead className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
+                         <tr>
+                           <th className={`p-4 sticky ${lang === 'he' ? 'right-0 border-l' : 'left-0 border-r'} bg-slate-50 border-slate-200 z-10 min-w-[150px]`}>{lang === 'he' ? 'פרמטר' : 'Parameter'}</th>
+                           {history.map((h, i) => (
+                             <th key={i} className={`p-4 whitespace-nowrap ${lang === 'he' ? 'border-l' : 'border-r'} border-slate-100 font-black text-sm text-indigo-800 text-center`}>
+                               {h.timestamp}
+                             </th>
+                           ))}
+                         </tr>
+                       </thead>
+                       <tbody>
+                         {Object.values(matrixParams).flatMap(cat => cat.params).map((p, idx) => (
+                           <tr key={p.id} className="border-b border-slate-100 hover:bg-slate-50/50">
+                             <td className={`p-4 sticky ${lang === 'he' ? 'right-0 border-l' : 'left-0 border-r'} bg-white border-slate-200 z-10 font-bold text-slate-800`}>
+                               {p.label}
+                             </td>
+                             {history.map((h, i) => {
+                               const val = h.data[p.id] || '-';
+                               return (
+                                 <td key={i} className={`p-4 text-center ${lang === 'he' ? 'border-l' : 'border-r'} border-slate-100 font-black text-lg`} style={{color: getStatusColor(val).replace('bg-','text-')}}>
+                                   {val}
+                                 </td>
+                               );
+                             })}
+                           </tr>
+                         ))}
+                       </tbody>
+                     </table>
+                   </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* HELP POPUP */}
+      {helpContent && (
+        <div className="fixed inset-0 z-[120] bg-slate-950/40 p-6 flex items-center justify-center backdrop-blur-sm" onClick={() => setHelpContent(null)}>
+          <div className={`bg-white rounded-[2rem] p-0 w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 ${lang === 'he' ? 'text-start' : 'text-start'}`} onClick={e => e.stopPropagation()}>
+            <div className="p-7 flex justify-between items-start bg-slate-50 border-b border-slate-100">
+               <h3 className="font-black text-3xl text-slate-900">{helpContent.label}</h3>
+               <button onClick={() => setHelpContent(null)} className="p-2 bg-white rounded-full text-slate-400 hover:text-slate-600 transition-colors shadow-sm">
+                 <X className="w-6 h-6" />
+               </button>
+            </div>
+
+            <div className="p-9 space-y-7 max-h-[60vh] overflow-y-auto no-scrollbar">
+              <p className={`text-slate-600 font-medium leading-relaxed text-xl whitespace-pre-wrap ${lang === 'he' ? 'text-start' : 'text-start'}`}>
+                {helpContent.info.desc}
+              </p>
+
+              {helpContent.info.under && (
+                <div className={`space-y-5 pt-5 border-t border-slate-100 ${lang === 'he' ? 'text-start' : 'text-start'}`}>
+                  <div className="text-lg leading-relaxed bg-amber-50 p-5 rounded-2xl border border-amber-100">
+                    <span className="font-black text-amber-800 block mb-1">{lang === 'he' ? 'חסר (Under):' : 'Under:'}</span>
+                    <span className="text-amber-900/80 font-medium">{helpContent.info.under}</span>
+                  </div>
+                  
+                  <div className="text-lg leading-relaxed bg-indigo-50 p-5 rounded-2xl border border-indigo-100">
+                    <span className="font-black text-indigo-800 block mb-1">{lang === 'he' ? 'מאוזן (Flow):' : 'Flow:'}</span>
+                    <span className="text-indigo-900/80 font-medium">{helpContent.info.flow}</span>
+                  </div>
+
+                  <div className="text-lg leading-relaxed bg-rose-50 p-5 rounded-2xl border border-rose-100">
+                    <span className="font-black text-rose-800 block mb-1">{lang === 'he' ? 'עודף (Over):' : 'Over:'}</span>
+                    <span className="text-rose-900/80 font-medium">{helpContent.info.over}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 bg-slate-50 flex justify-end border-t border-slate-100">
+              <button onClick={() => setHelpContent(null)} className="px-10 py-3.5 bg-slate-900 text-white rounded-xl font-black text-base uppercase tracking-wider hover:bg-slate-800 transition-all shadow-md active:scale-95">
+                {lang === 'he' ? 'סגור' : 'Close'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Choose AI Modal */}
+      {showAiModal && (
+        <div className={`fixed inset-0 z-[130] bg-slate-900/95 backdrop-blur-md p-6 flex items-center justify-center ${lang === 'he' ? 'text-start' : 'text-start'}`} onClick={() => setShowAiModal(false)}>
+           <div className="bg-white rounded-[3rem] p-10 w-full max-w-sm shadow-2xl text-center animate-in slide-in-from-bottom" onClick={e => e.stopPropagation()}>
+              <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                 <CheckCircle2 className="w-8 h-8" />
+              </div>
+              <h2 className="text-2xl font-black text-slate-900 mb-2">{lang === 'he' ? 'הפרומפט הועתק!' : 'Prompt Copied!'}</h2>
+              <p className="text-base text-slate-500 font-medium mb-8">
+                {lang === 'he' ? 'בחרו באיזו אפליקציה/אתר AI לפתוח כדי להדביק את הבקשה:' : 'Choose your preferred AI to paste the prompt:'}
+              </p>
+              <div className="space-y-3">
+                 <a href="https://chatgpt.com" target="_blank" rel="noopener noreferrer" className="w-full py-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between px-6 hover:bg-slate-100 font-bold text-slate-700">
+                    ChatGPT <ExternalLink className="w-5 h-5 text-slate-400" />
+                 </a>
+                 <a href="https://gemini.google.com" target="_blank" rel="noopener noreferrer" className="w-full py-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between px-6 hover:bg-slate-100 font-bold text-slate-700">
+                    Google Gemini <ExternalLink className="w-5 h-5 text-slate-400" />
+                 </a>
+                 <a href="https://claude.ai" target="_blank" rel="noopener noreferrer" className="w-full py-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between px-6 hover:bg-slate-100 font-bold text-slate-700">
+                    Claude AI <ExternalLink className="w-5 h-5 text-slate-400" />
+                 </a>
+              </div>
+              <button onClick={() => setShowAiModal(false)} className="mt-8 text-base font-bold text-slate-400 hover:text-slate-600 underline">
+                 {lang === 'he' ? 'סגור' : 'Close'}
+              </button>
+           </div>
+        </div>
+      )}
+
+      {/* Data Management Menu */}
+      {showDataMenu && (
+        <div className={`fixed inset-0 z-[100] bg-slate-950/80 flex items-center justify-center p-6 ${lang === 'he' ? 'text-start' : 'text-start'}`} onClick={() => setShowDataMenu(false)}>
+          <div className="bg-white rounded-[2rem] w-full max-w-sm p-8 text-center animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
+            <h2 className="text-2xl font-black mb-6 flex items-center justify-center gap-2">
+              <Layers className="w-6 h-6 text-indigo-600" /> {cur.data}
+            </h2>
+            
+            <div className="space-y-6">
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <h3 className="font-bold text-base text-slate-400 mb-3 uppercase tracking-wider">{lang === 'he' ? 'נתונים אישיים (היסטוריה)' : 'Personal History'}</h3>
+                <div className="space-y-2">
+                  <button onClick={exportHistoryJSONLocal} className="w-full p-4 bg-white border border-slate-200 rounded-xl font-bold text-sm flex items-center justify-between hover:border-indigo-300">
+                    <span>{lang === 'he' ? 'ייצוא נתונים אישיים' : 'Export History (JSON)'}</span>
+                    <Download className="w-5 h-5 text-indigo-500" />
+                  </button>
+                  <button onClick={() => dataInputRef.current.click()} className="w-full p-4 bg-white border border-slate-200 rounded-xl font-bold text-sm flex items-center justify-between hover:border-indigo-300">
+                    <span>{lang === 'he' ? 'ייבוא נתונים אישיים' : 'Import History (JSON)'}</span>
+                    <Upload className="w-5 h-5 text-indigo-500" />
+                  </button>
+                  <input type="file" ref={dataInputRef} onChange={handleHistoryUploadLocal} accept=".json" className="hidden" />
+                </div>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <h3 className="font-bold text-base text-slate-400 mb-3 uppercase tracking-wider">{lang === 'he' ? 'תבנית שאלון' : 'Questionnaire'}</h3>
+                <div className="space-y-2">
+                  <button onClick={downloadQuestionnaireCSVLocal} className="w-full p-4 bg-white border border-slate-200 rounded-xl font-bold text-sm flex items-center justify-between hover:border-emerald-300">
+                    <span>{lang === 'he' ? 'ייצוא שאלון לגוגל שיטס' : 'Export Template (CSV)'}</span>
+                    <FileSpreadsheet className="w-5 h-5 text-emerald-500" />
+                  </button>
+                  <button onClick={() => fileInputRef.current.click()} className="w-full p-4 bg-white border border-slate-200 rounded-xl font-bold text-sm flex items-center justify-between hover:border-emerald-300">
+                    <span>{lang === 'he' ? 'ייבוא שאלון מותאם' : 'Import Template (CSV)'}</span>
+                    <Upload className="w-5 h-5 text-emerald-500" />
+                  </button>
+                  <input type="file" ref={fileInputRef} onChange={handleQuestionnaireUploadLocal} accept=".csv" className="hidden" />
+                </div>
+              </div>
+            </div>
+
+            <button onClick={() => setShowDataMenu(false)} className="w-full mt-6 py-4 bg-slate-900 text-white rounded-xl font-black text-base uppercase tracking-wider hover:bg-slate-800 transition-all active:scale-95">
+              {lang === 'he' ? 'חזור' : 'Back'}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default App;
